@@ -1,0 +1,74 @@
+{
+  "testBills": [
+    {
+      "id": "high-usage",
+      "type": "electric",
+      "accountNumber": "1234-5678-9012",
+      "billingPeriod": "2024-01-15 to 2024-02-14",
+      "usage": {
+        "totalKwh": 1247,
+        "peakKwh": 498,
+        "offPeakKwh": 749
+      },
+      "charges": {
+        "baseCharge": 24.99,
+        "energyCharges": 149.64,
+        "peakCharges": 39.84,
+        "deliveryCharges": 18.75,
+        "environmentalFee": 4.50,
+        "taxes": 19.52,
+        "totalAmount": 257.24
+      },
+      "previousMonth": {
+        "usage": 892,
+        "amount": 189.45
+      },
+      "anomalies": ["high_usage", "peak_surge"]
+    },
+    {
+      "id": "normal-gas",
+      "type": "gas",
+      "accountNumber": "9876-5432-1098",
+      "billingPeriod": "2024-01-12 to 2024-02-11",
+      "usage": {
+        "totalTherms": 145
+      },
+      "charges": {
+        "customerCharge": 12.50,
+        "gasSupplyCharge": 129.05,
+        "distributionCharge": 23.20,
+        "pipelineFee": 1.75,
+        "taxes": 6.66,
+        "totalAmount": 173.16
+      },
+      "previousMonth": {
+        "usage": 167,
+        "amount": 189.23
+      },
+      "anomalies": []
+    },
+    {
+      "id": "water-leak",
+      "type": "water",
+      "accountNumber": "5555-7777-9999",
+      "billingPeriod": "2024-01-10 to 2024-02-09",
+      "usage": {
+        "totalGallons": 4436
+      },
+      "charges": {
+        "baseCharge": 18.50,
+        "waterUsage": 19.96,
+        "sewerCharge": 24.75,
+        "stormwaterFee": 8.25,
+        "environmentalFee": 2.50,
+        "taxes": 3.70,
+        "totalAmount": 77.66
+      },
+      "previousMonth": {
+        "usage": 1587,
+        "amount": 42.15
+      },
+      "anomalies": ["water_leak_suspected", "usage_spike"]
+    }
+  ]
+}

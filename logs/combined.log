@@ -1,0 +1,8 @@
+{"level":"info","message":"AI Billing & Payment Concierge server running on port 3000","service":"billing-payment-concierge","timestamp":"2025-07-17T23:02:40.871Z"}
+{"level":"info","message":"Environment: development","service":"billing-payment-concierge","timestamp":"2025-07-17T23:02:40.879Z"}
+{"level":"info","message":"Health check available at: http://localhost:3000/health","service":"billing-payment-concierge","timestamp":"2025-07-17T23:02:40.880Z"}
+{"level":"info","message":"::1 - - [17/Jul/2025:23:02:51 +0000] \"GET / HTTP/1.1\" 200 64867 \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0\"","service":"billing-payment-concierge","timestamp":"2025-07-17T23:02:51.993Z"}
+{"level":"info","message":"::1 - - [17/Jul/2025:23:08:48 +0000] \"GET /api/payments HTTP/1.1\" 404 285 \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0\"","service":"billing-payment-concierge","timestamp":"2025-07-17T23:08:48.035Z"}
+{"level":"info","message":"AI Billing & Payment Concierge server running on port 3000","service":"billing-payment-concierge","timestamp":"2025-07-17T23:20:59.403Z"}
+{"level":"info","message":"Environment: development","service":"billing-payment-concierge","timestamp":"2025-07-17T23:20:59.411Z"}
+{"level":"info","message":"Health check available at: http://localhost:3000/health","service":"billing-payment-concierge","timestamp":"2025-07-17T23:20:59.412Z"}

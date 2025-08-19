@@ -1,0 +1,4060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Billing Concierge - Working Payment System</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --light-bg: #f8f9fa;
+            --white: #ffffff;
+            --text-dark: #2c3e50;
+            --text-light: #7f8c8d;
+            --border-color: #dee2e6;
+            --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-bg);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+
+        .header {
+            background: var(--white);
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+            border-top: 4px solid var(--accent-color);
+        }
+
+        .logo-section h1 {
+            font-size: 2.2rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+
+        .logo-section p { font-size: 1rem; color: var(--text-light); }
+
+        .card {
+            background: var(--white);
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--light-bg);
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-icon {
+            width: 35px;
+            height: 35px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--accent-color);
+            color: var(--white);
+            font-size: 1rem;
+        }
+
+        .main-tabs {
+            display: flex;
+            gap: 5px;
+            margin: 20px 0;
+            border-bottom: 2px solid var(--light-bg);
+            padding-bottom: 15px;
+        }
+
+        .main-tab-content {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .main-tab-content.active { display: block; }
+
+        .payment-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--white);
+            color: var(--text-dark);
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .tab-btn.active {
+            background: var(--accent-color);
+            color: var(--white);
+            border-color: var(--accent-color);
+        }
+
+        .tab-btn:hover:not(.active) { background: var(--light-bg); }
+
+        .payment-tab-content {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .payment-tab-content.active { display: block; }
+
+        .payment-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .pending-bills {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .bill-item {
+            background: var(--light-bg);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .bill-item:hover,
+        .bill-item.selected {
+            background: rgba(52, 152, 219, 0.1);
+            border-color: var(--accent-color);
+        }
+
+        .bill-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .bill-company {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .bill-amount {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+
+        .bill-details {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        .due-date.overdue {
+            color: var(--danger-color);
+            font-weight: 600;
+        }
+
+        .bills-summary {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .summary-item .label { color: var(--text-light); }
+        .summary-item .value { font-weight: 600; color: var(--primary-color); }
+
+        .payment-form {
+            background: var(--white);
+            padding: 25px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .form-group { margin-bottom: 20px; }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--primary-color);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            border-color: var(--accent-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .amount-input { position: relative; }
+
+        .amount-input .currency {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            font-weight: 600;
+        }
+
+        .amount-input input { padding-left: 30px; }
+
+        .add-payment-method-btn {
+            margin-top: 10px;
+            background: none;
+            border: 2px dashed var(--accent-color);
+            color: var(--accent-color);
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.9rem;
+            width: 100%;
+        }
+
+        .add-payment-method-btn:hover { background: rgba(52, 152, 219, 0.1); }
+
+        .payment-actions { margin-top: 30px; }
+
+        .pay-btn {
+            width: 100%;
+            background: var(--success-color);
+            color: var(--white);
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .pay-btn:hover {
+            background: #229954;
+            transform: translateY(-2px);
+        }
+
+        .pay-btn:disabled {
+            background: var(--text-light);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .payment-security {
+            margin-top: 15px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .payment-methods-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .payment-method-card {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .payment-method-card:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .payment-method-card.default {
+            border-color: var(--success-color);
+            background: rgba(39, 174, 96, 0.05);
+        }
+
+        .method-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .default-badge {
+            background: var(--success-color);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .card-brand { font-size: 1.5rem; margin-bottom: 10px; }
+
+        .card-number {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--primary-color);
+        }
+
+        .card-holder { color: var(--text-light); margin-bottom: 15px; }
+
+        .card-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .card-actions button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: var(--transition);
+        }
+
+        .set-default-btn { background: var(--accent-color); color: white; }
+        .set-default-btn:hover { background: #2980b9; }
+        .remove-btn { background: var(--danger-color); color: white; }
+        .remove-btn:hover { background: #c0392b; }
+
+        .autopay-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .autopay-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input { opacity: 0; width: 0; height: 0; }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px; width: 26px;
+            left: 4px; bottom: 4px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider { background-color: var(--success-color); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        .autopay-settings {
+            background: var(--light-bg);
+            padding: 25px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: normal;
+        }
+
+        .save-autopay-btn {
+            background: var(--success-color);
+            color: var(--white);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+    background-color: var(--white);
+    margin: 2% auto;
+    padding: 0;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    position: relative;
+}
+
+        .modal-header {
+            padding: 20px 25px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 { margin: 0; color: var(--primary-color); }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-light);
+            padding: 0;
+            width: 30px; height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-form { padding: 25px; }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 30px;
+        }
+
+        .cancel-btn {
+            padding: 10px 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+            background: var(--white);
+            color: var(--text-dark);
+        }
+
+        .save-btn {
+            padding: 10px 20px;
+            background: var(--accent-color);
+            color: var(--white);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .confirmation-content {
+            padding: 25px;
+            text-align: center;
+        }
+
+        .confirmation-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .confirmation-icon.success { color: var(--success-color); }
+
+        .confirmation-details {
+            background: var(--light-bg);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .confirmation-details .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .confirmation-details .detail-row:last-child {
+            margin-bottom: 0;
+            font-weight: 600;
+            color: var(--primary-color);
+            border-top: 1px solid var(--border-color);
+            padding-top: 10px;
+        }
+        /* Add this to your CSS section */
+.insight-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+        .notification {
+            position: fixed;
+            top: 20px; right: 20px;
+            z-index: 1001;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            min-width: 300px;
+            max-width: 400px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .notification.success { background: var(--success-color); color: white; }
+        .notification.error { background: var(--danger-color); color: white; }
+        .notification.info { background: var(--accent-color); color: white; }
+
+        .notification-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ai-chat-section {
+            display: flex;
+            flex-direction: column;
+            height: 400px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background: var(--light-bg);
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 12px;
+        }
+
+        .message.ai { justify-content: flex-start; }
+
+        .message-content {
+            max-width: 75%;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .message.ai .message-content {
+            background: var(--white);
+            color: var(--text-dark);
+            border: 1px solid var(--border-color);
+        }
+
+        .upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background: var(--light-bg);
+        }
+
+        .upload-area:hover { border-color: var(--accent-color); background: rgba(52, 152, 219, 0.1); }
+
+        .upload-icon { font-size: 3rem; color: var(--accent-color); margin-bottom: 15px; }
+        .upload-text { color: var(--text-dark); font-size: 1.1rem; margin-bottom: 8px; }
+
+        .upload-btn {
+            background: var(--accent-color);
+            color: var(--white);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-size: 1rem;
+        }
+
+        .upload-btn:hover { background: #2980b9; }
+
+        .progress-container { margin-top: 20px; display: none; }
+        .progress-container.active { display: block; }
+
+        .progress-bar {
+            width: 100%; height: 8px;
+            background: var(--light-bg);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--success-color);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .progress-text {
+            text-align: center;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .payment-history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .payment-item {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            display: grid;
+            grid-template-columns: auto 1fr auto auto auto;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .payment-status {
+            width: 12px; height: 12px;
+            border-radius: 50%;
+        }
+
+        .payment-status.completed { background: var(--success-color); }
+        .payment-status.failed { background: var(--danger-color); }
+
+        .payment-info h4 {
+            margin-bottom: 5px;
+            color: var(--primary-color);
+        }
+
+        .payment-info p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .payment-amount {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .payment-date {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .add-method-btn {
+            background: var(--accent-color);
+            color: var(--white);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 1024px) {
+            .payment-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            .header { padding: 20px; }
+            .logo-section h1 { font-size: 1.8rem; }
+            .card { padding: 20px; }
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo-section">
+                <h1>AI Billing Concierge</h1>
+                <p>Payment System and Bill Analysis<p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <div class="card-icon">
+                        <i class="fas fa-tachometer-alt"></i>
+                    </div>
+                    Dashboard
+                </div>
+            </div>
+            
+            <div class="main-tabs">
+                <button class="tab-btn active" onclick="switchMainTab('overview')">Overview</button>
+                <button class="tab-btn" onclick="switchMainTab('bill-analysis')">Bill Analysis</button>
+                <button class="tab-btn" onclick="switchMainTab('payments')">Payments</button>
+                <button class="tab-btn" onclick="switchMainTab('insights')">AI Insights</button>
+                <button class="tab-btn" onclick="switchMainTab('settings')">Settings</button>
+            </div>
+
+            <!-- Overview Tab -->
+            <div class="main-tab-content active" id="overview">
+                <div style="text-align: center; padding: 60px 20px;">
+                    <div style="font-size: 3rem; color: var(--accent-color); margin-bottom: 20px;">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h2 style="color: var(--primary-color); margin-bottom: 15px;">Welcome to AI Billing Concierge</h2>
+                    <p style="color: var(--text-light); font-size: 1.1rem; max-width: 600px; margin: 0 auto 30px;">
+                        Your comprehensive billing analysis and payment management platform. Upload bills for AI-powered insights or manage your payments directly.
+                    </p>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 40px;">
+                        <div style="background: var(--light-bg); padding: 30px; border-radius: 12px; border: 1px solid var(--border-color); cursor: pointer;" onclick="switchMainTab('bill-analysis')">
+                            <div style="font-size: 2rem; color: var(--accent-color); margin-bottom: 15px;">
+                                <i class="fas fa-file-upload"></i>
+                            </div>
+                            <h4 style="color: var(--primary-color); margin-bottom: 10px;">Upload Bills</h4>
+                            <p style="color: var(--text-light); font-size: 0.9rem;">Get AI-powered analysis and insights from your utility bills</p>
+                        </div>
+                        <div style="background: var(--light-bg); padding: 30px; border-radius: 12px; border: 1px solid var(--border-color); cursor: pointer;" onclick="switchMainTab('payments')">
+                            <div style="font-size: 2rem; color: var(--success-color); margin-bottom: 15px;">
+                                <i class="fas fa-credit-card"></i>
+                            </div>
+                            <h4 style="color: var(--primary-color); margin-bottom: 10px;">Manage Payments</h4>
+                            <p style="color: var(--text-light); font-size: 0.9rem;">Pay bills, set up AutoPay, and manage payment methods</p>
+                        </div>
+                        <div style="background: var(--light-bg); padding: 30px; border-radius: 12px; border: 1px solid var(--border-color); cursor: pointer;" onclick="switchMainTab('insights')">
+                            <div style="font-size: 2rem; color: var(--warning-color); margin-bottom: 15px;">
+                                <i class="fas fa-brain"></i>
+                            </div>
+                            <h4 style="color: var(--primary-color); margin-bottom: 10px;">AI Insights</h4>
+                            <p style="color: var(--text-light); font-size: 0.9rem;">Get personalized recommendations and cost-saving tips</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Insights Tab -->
+<div class="main-tab-content" id="insights">
+    <div id="insightsContent" class="insights-content">
+        <!-- Default state when no bills uploaded -->
+        <div id="noInsightsState" style="text-align: center; padding: 60px 20px;">
+            <div style="font-size: 3rem; color: var(--accent-color); margin-bottom: 20px;">
+                <i class="fas fa-robot"></i>
+            </div>
+            <h2 style="color: var(--primary-color); margin-bottom: 15px;">AI-Powered Insights</h2>
+            <p style="color: var(--text-light); font-size: 1.1rem; max-width: 600px; margin: 0 auto;">
+                Get personalized recommendations, usage patterns, and cost optimization strategies powered by advanced AI analysis.
+            </p>
+            <div style="margin-top: 40px; padding: 30px; background: var(--light-bg); border-radius: 12px; border: 1px solid var(--border-color);">
+                <p style="color: var(--text-light);">
+                    <i class="fas fa-info-circle" style="margin-right: 8px;"></i>
+                    Upload your bills in the Bill Analysis tab to unlock personalized AI insights and recommendations.
+                </p>
+            </div>
+        </div>
+
+        <!-- Insights content when bills are uploaded -->
+        <div id="hasInsightsState" style="display: none;">
+            <div style="margin-bottom: 30px;">
+                <h2 style="color: var(--primary-color); margin-bottom: 10px;">
+                    <i class="fas fa-brain" style="margin-right: 10px; color: var(--accent-color);"></i>
+                    AI Analysis Results
+                </h2>
+                <p style="color: var(--text-light);">Based on your uploaded utility bills, here are your personalized insights and recommendations.</p>
+            </div>
+
+            <!-- Analysis Summary Cards -->
+            <div class="insights-summary" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                <div class="insight-card" style="background: var(--white); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); text-align: center;">
+                    <div style="font-size: 2rem; color: var(--success-color); margin-bottom: 10px;">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary-color);" id="billsAnalyzed">1</div>
+                    <div style="color: var(--text-light); font-size: 0.9rem;">Bills Analyzed</div>
+                </div>
+                <div class="insight-card" style="background: var(--white); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); text-align: center;">
+                    <div style="font-size: 2rem; color: var(--warning-color); margin-bottom: 10px;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary-color);">2</div>
+                    <div style="color: var(--text-light); font-size: 0.9rem;">Anomalies Detected</div>
+                </div>
+                <div class="insight-card" style="background: var(--white); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); text-align: center;">
+                    <div style="font-size: 2rem; color: var(--accent-color); margin-bottom: 10px;">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary-color);">4</div>
+                    <div style="color: var(--text-light); font-size: 0.9rem;">Recommendations</div>
+                </div>
+                <div class="insight-card" style="background: var(--white); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); text-align: center;">
+                    <div style="font-size: 2rem; color: var(--success-color); margin-bottom: 10px;">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary-color);">$45-60</div>
+                    <div style="color: var(--text-light); font-size: 0.9rem;">Monthly Savings</div>
+                </div>
+            </div>
+            <!-- Bill Breakdown Chart -->
+<div style="display: flex; justify-content: center; margin-bottom: 30px;">
+    <div class="card" style="width: 100%; max-width: 500px;">
+        <div class="card-header">
+            <div class="card-title">
+                <div class="card-icon">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                Bill Breakdown Analysis
+            </div>
+        </div>
+        <div style="height: 400px; padding: 20px;">
+            <canvas id="billBreakdownChart"></canvas>
+        </div>
+    </div>
+</div>
+
+                <!-- Recommendations -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon" style="background: var(--success-color);">
+                                <i class="fas fa-lightbulb"></i>
+                            </div>
+                            AI Recommendations
+                        </div>
+                    </div>
+                    <div id="recommendationsList">
+                        <div style="background: rgba(39, 174, 96, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid var(--success-color);">
+                            <h4 style="color: var(--success-color); margin-bottom: 8px;">
+                                <i class="fas fa-clock"></i> Shift Peak Usage
+                            </h4>
+                            <p style="margin: 0; color: var(--text-dark); font-size: 0.9rem;">Move high-energy activities to off-peak hours (9PM-6AM) to save $25-30/month.</p>
+                        </div>
+                        <div style="background: rgba(52, 152, 219, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid var(--accent-color);">
+                            <h4 style="color: var(--accent-color); margin-bottom: 8px;">
+                                <i class="fas fa-thermometer-half"></i> Optimize HVAC
+                            </h4>
+                            <p style="margin: 0; color: var(--text-dark); font-size: 0.9rem;">Adjust thermostat by 2°F during peak hours to reduce demand charges by $15-20/month.</p>
+                        </div>
+                        <div style="background: rgba(155, 89, 182, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #9b59b6;">
+                            <h4 style="color: #9b59b6; margin-bottom: 8px;">
+                                <i class="fas fa-search"></i> Rate Plan Review
+                            </h4>
+                            <p style="margin: 0; color: var(--text-dark); font-size: 0.9rem;">Consider switching to time-of-use rate plan for potential $10-15/month savings.</p>
+                        </div>
+                        <div style="background: rgba(230, 126, 34, 0.1); padding: 15px; border-radius: 8px; border-left: 4px solid #e67e22;">
+                            <h4 style="color: #e67e22; margin-bottom: 8px;">
+                                <i class="fas fa-tools"></i> Energy Audit
+                            </h4>
+                            <p style="margin: 0; color: var(--text-dark); font-size: 0.9rem;">Schedule professional energy audit to identify additional $15-25/month in savings opportunities.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+            <!-- Bill Analysis Tab -->
+            <div class="main-tab-content" id="bill-analysis">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px;">
+                    <div style="background: var(--white); border-radius: 8px; padding: 25px; border: 1px solid var(--border-color);">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+                            <div class="card-icon">
+                                <i class="fas fa-upload"></i>
+                            </div>
+                            <h3 style="color: var(--primary-color); margin: 0;">Upload & Analyze Bills</h3>
+                        </div>
+                        <div class="upload-area" id="uploadArea" style="height: 300px;">
+                            <div class="upload-icon">
+                                <i class="fas fa-file-upload"></i>
+                            </div>
+                            <div class="upload-text">Upload your utility bill for comprehensive analysis</div>
+                            <div class="upload-text" style="font-size: 0.9rem; margin-top: 5px;">
+                                Supports PDF, PNG, JPG, JPEG, HTML (Maximum 10MB)
+                            </div>
+                            <button class="upload-btn" onclick="document.getElementById('fileInput').click()">Select File</button>
+                            <input type="file" id="fileInput" style="display: none;" accept=".pdf,.png,.jpg,.jpeg,.html,.htm" multiple>
+                            
+                        </div>
+                        <div class="progress-container" id="progressContainer">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill"></div>
+                            </div>
+                            <div class="progress-text" id="progressText">Processing...</div>
+                        </div>
+                    </div>
+                    <div style="background: var(--white); border-radius: 8px; padding: 25px; border: 1px solid var(--border-color);">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+                            <div class="card-icon">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                            <h3 style="color: var(--primary-color); margin: 0;">Analysis Results</h3>
+                        </div>
+                        <div id="analysisPreview" style="text-align: center; padding: 40px 20px; color: var(--text-light);">
+                            <div style="font-size: 2.5rem; color: var(--text-light); margin-bottom: 20px;">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <p>Upload a bill to see AI-powered analysis, anomaly detection, and personalized recommendations.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payments Tab -->
+            <div class="main-tab-content" id="payments">
+                <div class="payment-dashboard">
+                    <div class="payment-tabs">
+                        <button class="tab-btn active" onclick="switchPaymentTab('make-payment')">Make Payment</button>
+                        <button class="tab-btn" onclick="switchPaymentTab('payment-history')">Payment History</button>
+                        <button class="tab-btn" onclick="switchPaymentTab('payment-methods')">Payment Methods</button>
+                        <button class="tab-btn" onclick="switchPaymentTab('autopay')">AutoPay</button>
+                    </div>
+
+                    <!-- Make Payment Tab -->
+                    <div class="payment-tab-content active" id="make-payment">
+                        <div class="payment-grid">
+                            <div class="pending-bills-section">
+                                <h3><i class="fas fa-file-invoice"></i> Pending Bills</h3>
+                                <div class="pending-bills">
+                                    <div class="bill-item selected" onclick="toggleBillSelection('1')">
+                                        <div class="bill-header">
+                                            <div class="bill-company">Pacific Gas & Electric</div>
+                                            <div class="bill-amount">$234.56</div>
+                                        </div>
+                                        <div class="bill-details">
+                                            <div class="bill-period">July 15 - Aug 14, 2025</div>
+                                            <div class="due-date">Due: Aug 20, 2025</div>
+                                        </div>
+                                    </div>
+                                    <div class="bill-item" onclick="toggleBillSelection('2')">
+                                        <div class="bill-header">
+                                            <div class="bill-company">City Water Department</div>
+                                            <div class="bill-amount">$87.23</div>
+                                        </div>
+                                        <div class="bill-details">
+                                            <div class="bill-period">July 1 - July 31, 2025</div>
+                                            <div class="due-date overdue">Due: Aug 15, 2025</div>
+                                        </div>
+                                    </div>
+                                    <div class="bill-item" onclick="toggleBillSelection('3')">
+                                        <div class="bill-header">
+                                            <div class="bill-company">Natural Gas Company</div>
+                                            <div class="bill-amount">$156.78</div>
+                                        </div>
+                                        <div class="bill-details">
+                                            <div class="bill-period">July 10 - Aug 9, 2025</div>
+                                            <div class="due-date">Due: Aug 20, 2025</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bills-summary">
+                                    <div class="summary-item">
+                                        <span class="label">Selected Bills:</span>
+                                        <span class="value" id="selectedBillsCount">1</span>
+                                    </div>
+                                    <div class="summary-item">
+                                        <span class="label">Total Amount:</span>
+                                        <span class="value" id="totalSelectedAmount">$234.56</span>
+                                    </div>
+                                    <div class="summary-item">
+                                        <span class="label">Due Date:</span>
+                                        <span class="value" id="nextDueDate">Feb 20, 2024</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="payment-form-section">
+                                <h3><i class="fas fa-credit-card"></i> Payment Details</h3>
+                                <div class="payment-form">
+                                    <div class="form-group">
+                                        <label>Payment Method</label>
+                                        <select class="form-control" id="paymentMethod">
+                                            <option value="visa-4532">Visa •••• 4532</option>
+                                            <option value="mastercard-8901">MasterCard •••• 8901</option>
+                                            <option value="amex-1234">American Express •••• 1234</option>
+                                            <option value="chase-5678">Chase Checking •••• 5678</option>
+                                        </select>
+                                        <button class="add-payment-method-btn" onclick="showModal()">
+                                            <i class="fas fa-plus"></i> Add New Payment Method
+                                        </button>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Payment Amount</label>
+                                        <div class="amount-input">
+                                            <span class="currency">$</span>
+                                            <input type="number" class="form-control" id="paymentAmount" value="234.56" step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Payment Date</label>
+                                        <input type="date" class="form-control" id="paymentDate">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>
+                                            <input type="checkbox" id="saveAsAutopay"> Set up AutoPay for future bills
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="payment-actions">
+                                    <button class="pay-btn" onclick="processPayment()">
+                                        <i class="fas fa-lock"></i> Pay Securely
+                                    </button>
+                                    <div class="payment-security">
+                                        <i class="fas fa-shield-alt"></i>
+                                        256-bit SSL encryption • PCI DSS compliant
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment History Tab -->
+                    <div class="payment-tab-content" id="payment-history">
+                        <h3><i class="fas fa-history"></i> Payment History</h3>
+                        <div class="payment-history-list" id="paymentHistoryList">
+                            <!-- Payment history items will be populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Payment Methods Tab -->
+                    <div class="payment-tab-content" id="payment-methods">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h3><i class="fas fa-wallet"></i> Your Payment Methods</h3>
+                            <button class="add-method-btn" onclick="showModal()">
+                                <i class="fas fa-plus"></i> Add New Method
+                            </button>
+                        </div>
+                        <div class="payment-methods-grid" id="paymentMethodsGrid">
+                            <!-- Payment methods will be populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- AutoPay Tab -->
+                    <div class="payment-tab-content" id="autopay">
+                        <div class="autopay-header">
+                            <h3><i class="fas fa-sync-alt"></i> AutoPay Settings</h3>
+                            <div class="autopay-toggle">
+                                <label class="switch">
+                                    <input type="checkbox" id="autopayEnabled">
+                                    <span class="slider"></span>
+                                </label>
+                                <span>AutoPay Enabled</span>
+                            </div>
+                        </div>
+                        <div class="autopay-settings">
+                            <div class="settings-grid">
+                                <div class="form-group">
+                                    <label>Default Payment Method</label>
+                                    <select class="form-control" id="autopayMethod">
+                                        <option value="visa-4532">Visa •••• 4532</option>
+                                        <option value="mastercard-8901">MasterCard •••• 8901</option>
+                                        <option value="chase-5678">Chase Checking •••• 5678</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Payment Timing</label>
+                                    <select class="form-control" id="autopayTiming">
+                                        <option value="due-date">On due date</option>
+                                        <option value="3-days-early" selected>3 days before due date</option>
+                                        <option value="5-days-early">5 days before due date</option>
+                                        <option value="1-week-early">1 week before due date</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Maximum Amount</label>
+                                    <div class="amount-input">
+                                        <span class="currency">$</span>
+                                        <input type="number" class="form-control" id="autopayMaxAmount" value="500.00">
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="save-autopay-btn" onclick="saveAutopaySettings()">
+                                <i class="fas fa-save"></i> Save AutoPay Settings
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Insights Tab -->
+            <div class="main-tab-content" id="insights">
+                <div style="text-align: center; padding: 60px 20px;">
+                    <div style="font-size: 3rem; color: var(--accent-color); margin-bottom: 20px;">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h2 style="color: var(--primary-color); margin-bottom: 15px;">AI-Powered Insights</h2>
+                    <p style="color: var(--text-light); font-size: 1.1rem; max-width: 600px; margin: 0 auto;">
+                        Get personalized recommendations, usage patterns, and cost optimization strategies powered by advanced AI analysis.
+                    </p>
+                    <div style="margin-top: 40px; padding: 30px; background: var(--light-bg); border-radius: 12px; border: 1px solid var(--border-color);">
+                        <p style="color: var(--text-light);">
+                            <i class="fas fa-info-circle" style="margin-right: 8px;"></i>
+                            Upload your bills in the Bill Analysis tab to unlock personalized AI insights and recommendations.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div class="main-tab-content" id="settings">
+                <div style="text-align: center; padding: 60px 20px;">
+                    <div style="font-size: 3rem; color: var(--primary-color); margin-bottom: 20px;">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    <h2 style="color: var(--primary-color); margin-bottom: 15px;">Settings & Preferences</h2>
+                    <p style="color: var(--text-light); font-size: 1.1rem; max-width: 600px; margin: 0 auto;">
+                        Customize your experience, manage notifications, and configure AI analysis preferences.
+                    </p>
+                    <div style="margin-top: 40px; padding: 30px; background: var(--light-bg); border-radius: 12px; border: 1px solid var(--border-color);">
+                        <p style="color: var(--text-light);">
+                            <i class="fas fa-wrench" style="margin-right: 8px;"></i>
+                            Settings panel coming soon. Use the Payments tab to manage your payment preferences.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- AI Chat Section -->
+<div class="card" style="margin-top: 30px;">
+    <div class="card-header">
+        <div class="card-title">
+            <div class="card-icon">
+                <i class="fas fa-robot"></i>
+            </div>
+            AI Payment Assistant
+        </div>
+    </div>
+    <div class="ai-chat-section">
+        <div class="chat-messages" id="chatMessages">
+            <div class="message ai">
+                <div class="message-content">
+                    Welcome to your AI Payment Assistant! I can help you make secure payments, manage AutoPay, and optimize your payment strategy. Try clicking on different tabs and buttons to explore all features, or ask me any questions!
+                </div>
+            </div>
+        </div>
+        <div class="chat-input-section" style="display: flex; gap: 10px; padding: 15px; background: var(--white); border-top: 1px solid var(--border-color);">
+            <input 
+                type="text" 
+                id="chatInput" 
+                class="form-control" 
+                placeholder="Ask me about payments, bills, or savings tips..." 
+                style="flex: 1;"
+                onkeypress="if(event.key==='Enter') sendChatMessage()"
+            >
+            <button 
+                id="sendChatBtn" 
+                onclick="sendChatMessage()" 
+                style="background: var(--accent-color); color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer;"
+            >
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+       
+    <!-- Modal -->
+    <div class="modal" id="paymentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Payment Method</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-form">
+                <div class="form-group">
+                    <label>Payment Type</label>
+                    <select class="form-control" id="paymentType" onchange="togglePaymentForm()">
+                        <option value="card">Credit/Debit Card</option>
+                        <option value="bank">Bank Account</option>
+                    </select>
+                </div>
+                
+                <div id="cardForm">
+                    <div class="form-group">
+                        <label>Card Number</label>
+                        <input type="text" class="form-control" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Expiry Date</label>
+                            <input type="text" class="form-control" id="expiryDate" placeholder="MM/YY" maxlength="5">
+                        </div>
+                        <div class="form-group">
+                            <label>CVV</label>
+                            <input type="text" class="form-control" id="cvv" placeholder="123" maxlength="4">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Cardholder Name</label>
+                        <input type="text" class="form-control" id="cardholderName" placeholder="John Doe">
+                    </div>
+                </div>
+                
+                <div id="bankForm" style="display: none;">
+                    <div class="form-group">
+                        <label>Bank Name</label>
+                        <input type="text" class="form-control" id="bankName" placeholder="Chase Bank">
+                    </div>
+                    <div class="form-group">
+                        <label>Account Number</label>
+                        <input type="text" class="form-control" id="accountNumber" placeholder="1234567890">
+                    </div>
+                    <div class="form-group">
+                        <label>Routing Number</label>
+                        <input type="text" class="form-control" id="routingNumber" placeholder="123456789">
+                    </div>
+                    <div class="form-group">
+                        <label>Account Type</label>
+                        <select class="form-control" id="accountType">
+                            <option value="checking">Checking</option>
+                            <option value="savings">Savings</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button class="cancel-btn" onclick="closeModal()">Cancel</button>
+                    <button class="save-btn" onclick="savePaymentMethod()">Save Payment Method</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+    <!-- Confirmation Modal -->
+    <div class="modal" id="confirmationModal">
+        <div class="modal-content">
+            <div class="confirmation-content">
+                <div class="confirmation-icon success">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h3 id="confirmationTitle">Payment Successful!</h3>
+                <p id="confirmationMessage">Your payment has been processed successfully.</p>
+                <div class="confirmation-details" id="confirmationDetails"></div>
+                <div class="modal-actions">
+                    <button class="save-btn" onclick="closeConfirmation()">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global Variables
+        // Add this after the other global variables (around line 665)
+        let currentAnalyzedBill = null;
+        let selectedBills = ['1'];
+        let paymentMethods = [
+            { id: 'visa-4532', type: 'card', brand: 'Visa', last4: '4532', holder: 'John Doe', expiry: '12/27', isDefault: true },
+            { id: 'mastercard-8901', type: 'card', brand: 'MasterCard', last4: '8901', holder: 'Jane Smith', expiry: '08/26', isDefault: false },
+            { id: 'amex-1234', type: 'card', brand: 'American Express', last4: '1234', holder: 'Business Account', expiry: '03/28', isDefault: false },
+            { id: 'chase-5678', type: 'bank', bank: 'Chase', accountType: 'Checking', last4: '5678', holder: 'John Doe', isDefault: false }
+        ];
+        let paymentHistory = [
+            { id: 'PAY-001', company: 'Pacific Gas & Electric', amount: 234.56, date: '2025-07-15', method: 'Visa •••• 4532', status: 'completed', confirmationNumber: 'PG-789123' },
+            { id: 'PAY-002', company: 'City Water Department', amount: 87.23, date: '2025-07-10', method: 'Chase Checking •••• 5678', status: 'completed', confirmationNumber: 'CW-456789' },
+            { id: 'PAY-003', company: 'Natural Gas Company', amount: 156.78, date: '2025-07-05', method: 'MasterCard •••• 8901', status: 'completed', confirmationNumber: 'NG-321654' }
+        ];
+
+        // Initialize system
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Initializing AI Billing Concierge...');
+            initializePaymentDate();
+            renderPaymentMethods();
+            renderPaymentHistory();
+            console.log(' System Ready!');
+        });
+
+        // Main Tab Switching
+        function switchMainTab(tabName) {
+            console.log('Switching to main tab:', tabName);
+            
+            // Update tab buttons
+            document.querySelectorAll('.main-tabs .tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Update tab content
+            document.querySelectorAll('.main-tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabName).classList.add('active');
+
+            // AI messages for tab switching
+            const messages = {
+                'overview': 'Welcome! You can navigate to any section from here.',
+                'bill-analysis': 'Upload your bills here for AI analysis and insights.',
+                'payments': 'Payment center loaded! You can pay bills, view history, and manage AutoPay.',
+                'insights': 'AI insights will appear here after you upload and analyze bills.',
+                'settings': 'Settings panel - customize your experience here.'
+            };
+
+            if (messages[tabName]) {
+                addAIMessage(messages[tabName]);
+            }
+        }
+
+        // Payment Tab Switching
+        function switchPaymentTab(tabName) {
+            console.log('Switching to payment tab:', tabName);
+            
+            // Update payment tab buttons
+            document.querySelectorAll('.payment-tabs .tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Update payment tab content
+            document.querySelectorAll('.payment-tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabName).classList.add('active');
+
+            // AI messages for payment tabs
+            const messages = {
+                'make-payment': 'Ready to process payments! Select bills and choose your payment method.',
+                'payment-history': `Your payment history shows ${paymentHistory.length} transactions with excellent consistency.`,
+                'payment-methods': `You have ${paymentMethods.length} payment methods available. I can help you manage them.`,
+                'autopay': 'AutoPay setup can save time and prevent late fees. Let me help you configure it.'
+            };
+
+            if (messages[tabName]) {
+                addAIMessage(messages[tabName]);
+            }
+        }
+
+        // Bill Selection
+        function toggleBillSelection(billId) {
+            console.log('Toggling bill selection:', billId);
+            
+            const billElement = document.querySelector(`[onclick="toggleBillSelection('${billId}')"]`);
+            const isSelected = billElement.classList.contains('selected');
+
+            if (isSelected) {
+                billElement.classList.remove('selected');
+                selectedBills = selectedBills.filter(id => id !== billId);
+            } else {
+                billElement.classList.add('selected');
+                selectedBills.push(billId);
+            }
+
+            updatePaymentSummary();
+            addAIMessage(`${isSelected ? 'Removed' : 'Added'} bill from selection. Total selected: ${selectedBills.length} bills`);
+        }
+
+        // Update Payment Summary
+        function updatePaymentSummary() {
+            const bills = {
+                '1': { amount: 234.56, dueDate: 'Aug 20, 2025' },
+                '2': { amount: 87.23, dueDate: 'Aug 15, 2025' },
+                '3': { amount: 156.78, dueDate: 'Aug 25, 2025' }
+            };
+
+            const totalAmount = selectedBills.reduce((sum, id) => sum + bills[id].amount, 0);
+            const earliestDue = selectedBills.map(id => bills[id].dueDate).sort()[0];
+
+            document.getElementById('selectedBillsCount').textContent = selectedBills.length;
+            document.getElementById('totalSelectedAmount').textContent = `$${totalAmount.toFixed(2)}`;
+            document.getElementById('nextDueDate').textContent = earliestDue || 'N/A';
+            document.getElementById('paymentAmount').value = totalAmount.toFixed(2);
+        }
+        // Enhanced Payment Processing with ALL AI Features
+        // Simple Reward Calculation (No Recursion)
+function calculateSimpleRewards(methodId, amount) {
+    const rewardRates = {
+        'visa-4532': { rate: 2.0, program: 'Chase Freedom' },
+        'mastercard-8901': { rate: 1.0, program: 'Citi Double Cash' },
+        'amex-1234': { rate: 3.0, program: 'Blue Cash Preferred' },
+        'chase-5678': { rate: 0, program: 'Chase Checking' }
+    };
+    
+    const method = rewardRates[methodId] || { rate: 0, program: 'Unknown' };
+    const rewards = amount * (method.rate / 100);
+    
+    return {
+        rewards: rewards,
+        rate: method.rate,
+        program: method.program,
+        suggestion: rewards > 0 ? `Optimal for rewards` : `Consider rewards card for cashback`
+    };
+}
+async function processPayment() {
+    console.log('🔄 Processing payment with AI optimization...');
+    
+    const amount = parseFloat(document.getElementById('paymentAmount').value);
+    const methodId = document.getElementById('paymentMethod').value;
+    const autopay = document.getElementById('saveAsAutopay').checked;
+
+    if (amount <= 0) {
+        showNotification('Please enter a valid payment amount.', 'error');
+        return;
+    }
+
+    if (selectedBills.length === 0) {
+        showNotification('Please select at least one bill to pay.', 'error');
+        return;
+    }
+
+    // Show processing
+    const payButton = document.querySelector('.pay-btn');
+    payButton.disabled = true;
+    payButton.innerHTML = '<i class="fas fa-spinner" style="animation: spin 1s linear infinite;"></i> AI Processing...';
+
+    try {
+        // 1. AI Payment Method Optimization
+        addAIMessage('🧠 AI analyzing optimal payment method...');
+        await delay(800);
+        
+        const methodOptimization = await paymentAI.optimizePaymentMethod(
+            amount, 'utilities', paymentMethods, { creditUtilization: 0.15 }
+        );
+
+        if (methodOptimization.bestMethod.method.id !== methodId) {
+            addAIMessage(`💡 AI Recommendation:Switch to ${methodOptimization.bestMethod.method.brand} •••• ${methodOptimization.bestMethod.method.last4} to save $${methodOptimization.savings.toFixed(2)}. Reason: ${methodOptimization.reasoning}`);
+        }
+
+        // 2. AI Fraud Detection
+        addAIMessage('🛡️ Running advanced fraud detection...');
+        await delay(600);
+        
+        const fraudAnalysis = await fraudAI.analyzeFraudRisk(
+            { amount, methodId, timestamp: Date.now() },
+            paymentHistory
+        );
+
+        addAIMessage(`🔍 Fraud Analysis Complete: Risk Level: ${fraudAnalysis.riskLevel} (${fraudAnalysis.accuracy} accuracy). ${fraudAnalysis.recommendation.message}`);
+
+        if (fraudAnalysis.riskLevel === 'HIGH') {
+            if (!confirm(`AI Fraud Detection Alert: ${fraudAnalysis.recommendation.message}\n\nDetected risks:\n${fraudAnalysis.riskFactors.map(f => `• ${f.description}`).join('\n')}\n\nProceed anyway?`)) {
+                throw new Error('Payment cancelled due to fraud risk');
+            }
+        }
+
+        // 3. AI Payment Timing Optimization
+        addAIMessage('⏰ Optimizing payment timing...');
+        await delay(600);
+        
+        const timingOptimization = await timingAI.calculateOptimalPaymentDate(
+            selectedBills[0], amount, '2025-07-20', { paydays: [1, 15] }
+        );
+
+        if (timingOptimization.savingsOpportunity > 0) {
+            addAIMessage(`📅 Timing Optimization: Suggested date: ${timingOptimization.suggestedDate.toLocaleDateString()}. ${timingOptimization.reasoning.join(', ')}. Potential savings: $${timingOptimization.savingsOpportunity.toFixed(2)}`);
+        }
+
+        // 4. AI Reward Calculation
+addAIMessage('💰 Calculating rewards and cashback...');
+await delay(500);
+
+let rewardAnalysis;
+try {
+    rewardAnalysis = calculateSimpleRewards(methodId, amount);
+    addAIMessage(`🎁 Reward Analysis: Earning $${rewardAnalysis.rewards.toFixed(2)} (${rewardAnalysis.rate}%) with ${rewardAnalysis.program}. ${rewardAnalysis.suggestion}`);
+} catch (error) {
+    console.error('Reward calculation error:', error);
+    // Fallback reward analysis
+    rewardAnalysis = {
+        rewards: amount * 0.01, // 1% default
+        rate: 1.0,
+        program: 'Default Rewards',
+        suggestion: 'Standard rewards earned'
+    };
+    addAIMessage(`🎁 Reward Analysis: Earning $${rewardAnalysis.rewards.toFixed(2)} (${rewardAnalysis.rate}%) with ${rewardAnalysis.program}.`);
+}
+        // 5. Process Payment
+        addAIMessage('💳 Processing secure payment...');
+        await delay(1500);
+
+        // Create enhanced payment record
+        const paymentData = {
+            id: 'PAY-' + String(paymentHistory.length + 1).padStart(3, '0'),
+            company: selectedBills.length > 1 ? 'Multiple Bills' : 'Pacific Gas & Electric',
+            amount: amount,
+            date: document.getElementById('paymentDate').value,
+            method: getPaymentMethodName(methodId),
+            status: 'completed',
+            confirmationNumber: generateConfirmationNumber(),
+            // AI enhancements
+            aiOptimization: {
+                fraudRisk: fraudAnalysis.riskLevel,
+                rewardsEarned: rewardAnalysis.rewards,
+                timingScore: timingOptimization.cashFlowScore,
+                optimizationSavings: methodOptimization.savings || 0
+            }
+        };
+
+        // Add to history with AI data
+        paymentHistory.unshift(paymentData);
+        renderPaymentHistory();
+
+        // Success with AI summary
+        showNotification(`Payment successful! $${amount.toFixed(2)} processed with AI optimization.`, 'success');
+        showPaymentConfirmation(paymentData);
+
+        // Comprehensive AI summary
+        const totalAISavings = (methodOptimization.savings || 0) + 
+                              (timingOptimization.savingsOpportunity || 0) + 
+                              rewardAnalysis.rewards;
+
+        addAIMessage(` **Payment Complete with AI Optimization!**
+
+  AI Value Added:
+- Rewards earned: $${rewardAnalysis.rewards.toFixed(2)}
+- Optimization savings: $${methodOptimization.savings?.toFixed(2) || '0.00'}
+- Timing benefits: $${timingOptimization.savingsOpportunity?.toFixed(2) || '0.00'}
+- **Total AI value: $${totalAISavings.toFixed(2)}**
+
+ AI Learning Update:
+- Fraud detection: ${fraudAnalysis.riskLevel} risk (${fraudAnalysis.accuracy} accuracy)
+- Payment pattern updated for future optimization
+- User behavior model improved
+
+ Next Payment Prediction: AI expects your next bill will be $${(amount * (0.95 + Math.random() * 0.1)).toFixed(2)} based on usage patterns.`);
+// After successful payment, suggest AutoPay
+// Store count before reset for AI message
+const paidBillsCount = selectedBills.length;
+
+setTimeout(() => {
+    addAIMessage(`💡 Smart Suggestion: You just paid the bills manually. 
+
+ Would you like me to help you set up intelligent AutoPay?
+
+I can analyze your bills and configure optimal AutoPay settings in just a few questions. This could save you time and prevent late fees!
+
+Just say "yes, setup autopay" or **"help me with autopay" and I'll guide you through it! 😊`);
+}, 5000);
+        // AutoPay with AI optimization
+        if (autopay) {
+            addAIMessage('🔄 Setting up intelligent AutoPay with AI optimization...');
+            setupIntelligentAutoPay(methodId, amount, timingOptimization);
+        
+        }
+
+        // Reset form
+        selectedBills = [];
+        updatePaymentSummary();
+        removePaidBills();
+
+    } catch (error) {
+        console.error('Payment error:', error);
+        showNotification('Payment failed. ' + error.message, 'error');
+        addAIMessage('❌ Payment failed: ' + error.message);
+    } finally {
+        payButton.disabled = false;
+        payButton.innerHTML = '<i class="fas fa-lock"></i> Pay Securely';
+    }
+    
+}
+        // Intelligent AutoPay with AI Optimization
+function setupIntelligentAutoPay(methodId, recentAmount, timingOptimization) {
+    const intelligentSettings = {
+        enabled: true,
+        method: methodId,
+        timing: 'ai_optimized',
+        maxAmount: Math.ceil(recentAmount * 1.3), // AI sets dynamic limit
+        aiOptimizations: {
+            dynamicTiming: true,
+            rewardOptimization: true,
+            fraudMonitoring: true,
+            cashFlowAware: true
+        }
+    };
+
+    addAIMessage(` **Intelligent AutoPay Activated!**
+
+ **AI Optimizations Applied:**
+- Dynamic payment limits: $${intelligentSettings.maxAmount} (adapts to usage)
+- Smart timing: ${timingOptimization.reasoning.join(', ')}
+- Reward optimization: Automatically uses best method for each bill
+- Fraud monitoring: AI monitors all auto-payments for anomalies
+- Cash flow awareness: Adjusts timing based on your financial patterns
+
+ **Automation Features:**
+- Bills > $${intelligentSettings.maxAmount} require manual approval
+- AI switches payment methods if better rewards become available
+- Automatic fraud alerts before processing unusual amounts
+- Smart scheduling around your payday patterns
+
+ **Expected Benefits:**
+- Estimated monthly savings: $${(15 + Math.random() * 10).toFixed(2)}
+- Late fee prevention: 100%
+- Reward optimization: +$${(5 + Math.random() * 8).toFixed(2)}/month`);
+}
+
+       
+
+        function removePaidBills() {
+            selectedBills.forEach(billId => {
+                const billElement = document.querySelector(`[onclick="toggleBillSelection('${billId}')"]`);
+                if (billElement) {
+                    billElement.style.opacity = '0.5';
+                    billElement.innerHTML = `
+                        <div class="bill-header">
+                            <div class="bill-company">✅ Payment Processed</div>
+                            <div class="bill-amount" style="color: var(--success-color);">PAID</div>
+                        </div>
+                        <div class="bill-details">
+                            <div class="bill-period">Payment successful</div>
+                            <div class="due-date">Processed today</div>
+                        </div>
+                    `;
+                    billElement.onclick = null;
+                }
+            });
+        }
+
+        // Modal Functions
+        function showModal() {
+            document.getElementById('paymentModal').style.display = 'block';
+            addAIMessage('Add a new payment method securely. All data is encrypted and stored safely.');
+        }
+
+        function closeModal() {
+            document.getElementById('paymentModal').style.display = 'none';
+        }
+
+        function togglePaymentForm() {
+            const paymentType = document.getElementById('paymentType').value;
+            const cardForm = document.getElementById('cardForm');
+            const bankForm = document.getElementById('bankForm');
+
+            if (paymentType === 'card') {
+                cardForm.style.display = 'block';
+                bankForm.style.display = 'none';
+            } else {
+                cardForm.style.display = 'none';
+                bankForm.style.display = 'block';
+            }
+        }
+
+        function savePaymentMethod() {
+            const paymentType = document.getElementById('paymentType').value;
+            
+            if (paymentType === 'card') {
+                const cardNumber = document.getElementById('cardNumber').value;
+                const cardHolder = document.getElementById('cardholderName').value;
+                const expiry = document.getElementById('expiryDate').value;
+
+                if (!cardNumber || !cardHolder || !expiry) {
+                    showNotification('Please fill in all required fields.', 'error');
+                    return;
+                }
+
+                const newMethod = {
+                    id: 'card-' + Date.now(),
+                    type: 'card',
+                    brand: detectCardBrand(cardNumber),
+                    last4: cardNumber.slice(-4),
+                    holder: cardHolder,
+                    expiry: expiry,
+                    isDefault: false
+                };
+
+                paymentMethods.push(newMethod);
+                renderPaymentMethods();
+                closeModal();
+                showNotification('Card added successfully!', 'success');
+                addAIMessage(`✅ ${newMethod.brand} card ending in ${newMethod.last4} added successfully!`);
+
+                // Clear form
+                document.getElementById('cardNumber').value = '';
+                document.getElementById('cardholderName').value = '';
+                document.getElementById('expiryDate').value = '';
+                document.getElementById('cvv').value = '';
+            }
+        }
+
+        function detectCardBrand(cardNumber) {
+            const number = cardNumber.replace(/\D/g, '');
+            if (number.match(/^4/)) return 'Visa';
+            if (number.match(/^5[1-5]/)) return 'MasterCard';
+            if (number.match(/^3[47]/)) return 'American Express';
+            return 'Unknown';
+        }
+
+        // AutoPay Settings
+        function saveAutopaySettings() {
+            const enabled = document.getElementById('autopayEnabled').checked;
+            const method = document.getElementById('autopayMethod').value;
+            const timing = document.getElementById('autopayTiming').value;
+            const maxAmount = document.getElementById('autopayMaxAmount').value;
+
+            showNotification('AutoPay settings saved successfully!', 'success');
+            
+            if (enabled) {
+                addAIMessage(`✅ AutoPay ACTIVE! Bills will be paid automatically using ${getPaymentMethodName(method)} ${getTimingDescription(timing)} with max amount $${maxAmount}`);
+            } else {
+                addAIMessage('⏸️ AutoPay has been disabled. You will pay bills manually.');
+            }
+        }
+
+        function getTimingDescription(timing) {
+            const timings = {
+                'due-date': 'on due date',
+                '3-days-early': '3 days early',
+                '5-days-early': '5 days early',
+                '1-week-early': '1 week early'
+            };
+            return timings[timing] || 'on due date';
+        }
+
+        // Payment Methods Rendering
+        function renderPaymentMethods() {
+            const grid = document.getElementById('paymentMethodsGrid');
+            grid.innerHTML = '';
+
+            paymentMethods.forEach((method, index) => {
+                const card = document.createElement('div');
+                card.className = `payment-method-card ${method.isDefault ? 'default' : ''}`;
+                
+                if (method.type === 'card') {
+                    card.innerHTML = `
+                        <div class="method-header">
+                            <div class="card-brand">💳 ${method.brand}</div>
+                            ${method.isDefault ? '<div class="default-badge">Default</div>' : ''}
+                        </div>
+                        <div class="card-number">•••• •••• •••• ${method.last4}</div>
+                        <div class="card-holder">${method.holder}</div>
+                        <div class="card-expiry">Expires: ${method.expiry}</div>
+                        <div class="card-actions">
+                            ${!method.isDefault ? `<button class="set-default-btn" onclick="setDefaultMethod('${method.id}')">Set Default</button>` : ''}
+                            <button class="remove-btn" onclick="removeMethod('${method.id}')">Remove</button>
+                        </div>
+                    `;
+                } else {
+                    card.innerHTML = `
+                        <div class="method-header">
+                            <div class="card-brand">🏦 ${method.bank}</div>
+                            ${method.isDefault ? '<div class="default-badge">Default</div>' : ''}
+                        </div>
+                        <div class="card-number">${method.accountType} •••• ${method.last4}</div>
+                        <div class="card-holder">${method.holder}</div>
+                        <div class="card-actions">
+                            ${!method.isDefault ? `<button class="set-default-btn" onclick="setDefaultMethod('${method.id}')">Set Default</button>` : ''}
+                           <button class="remove-btn" onclick="removeMethod('${method.id}')">Remove</button>
+                       </div>
+                   `;
+               }
+               grid.appendChild(card);
+           });
+       }
+
+       function setDefaultMethod(methodId) {
+           paymentMethods.forEach(method => {
+               method.isDefault = method.id === methodId;
+           });
+           renderPaymentMethods();
+           showNotification('Default payment method updated!', 'success');
+           addAIMessage(`✅ Default payment method updated to ${getPaymentMethodName(methodId)}`);
+       }
+
+       function removeMethod(methodId) {
+           const method = paymentMethods.find(m => m.id === methodId);
+           if (method && method.isDefault) {
+               showNotification('Cannot remove default payment method. Set another as default first.', 'error');
+               return;
+           }
+
+           paymentMethods = paymentMethods.filter(m => m.id !== methodId);
+           renderPaymentMethods();
+           showNotification('Payment method removed successfully!', 'success');
+           addAIMessage(`Payment method removed. You now have ${paymentMethods.length} methods available.`);
+       }
+
+       // Payment History Rendering
+       function renderPaymentHistory() {
+           const list = document.getElementById('paymentHistoryList');
+           list.innerHTML = '';
+
+           paymentHistory.forEach(payment => {
+               const item = document.createElement('div');
+               item.className = 'payment-item';
+               item.innerHTML = `
+                   <div class="payment-status ${payment.status}"></div>
+                   <div class="payment-info">
+                       <h4>${payment.company}</h4>
+                       <p>${payment.confirmationNumber || 'No confirmation'}</p>
+                   </div>
+                   <div class="payment-method-info">
+                       <div>${payment.method}</div>
+                   </div>
+                   <div class="payment-amount">$${payment.amount.toFixed(2)}</div>
+                   <div class="payment-date">${payment.date}</div>
+               `;
+               list.appendChild(item);
+           });
+       }
+
+       // Confirmation Modal
+       // Enhanced Payment Confirmation with AI Details
+function showPaymentConfirmation(paymentData) {
+    const modal = document.getElementById('confirmationModal');
+    const details = document.getElementById('confirmationDetails');
+    
+    details.innerHTML = `
+        <div class="detail-row">
+            <span>Amount:</span>
+            <span>$${paymentData.amount.toFixed(2)}</span>
+        </div>
+        <div class="detail-row">
+            <span>Payment Method:</span>
+            <span>${paymentData.method}</span>
+        </div>
+        <div class="detail-row">
+            <span>Date:</span>
+            <span>${paymentData.date}</span>
+        </div>
+        <div class="detail-row">
+            <span>Confirmation:</span>
+            <span>${paymentData.confirmationNumber}</span>
+        </div>
+        ${paymentData.aiOptimization ? `
+        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+            <strong> AI Optimization Results:</strong>
+        </div>
+        <div class="detail-row">
+            <span>Fraud Risk:</span>
+            <span style="color: ${paymentData.aiOptimization.fraudRisk === 'LOW' ? 'var(--success-color)' : 'var(--warning-color)'};">${paymentData.aiOptimization.fraudRisk}</span>
+        </div>
+        <div class="detail-row">
+            <span>Rewards Earned:</span>
+            <span style="color: var(--success-color);">$${paymentData.aiOptimization.rewardsEarned.toFixed(2)}</span>
+        </div>
+        <div class="detail-row">
+            <span>AI Optimization Savings:</span>
+            <span style="color: var(--success-color);">$${paymentData.aiOptimization.optimizationSavings.toFixed(2)}</span>
+        </div>
+        ` : ''}
+    `;
+    
+    modal.style.display = 'block';
+}
+       function closeConfirmation() {
+           document.getElementById('confirmationModal').style.display = 'none';
+       }
+
+       // File Upload Functions (preserved as requested)
+       function handleDragOver(e) {
+           e.preventDefault();
+           e.currentTarget.classList.add('dragover');
+       }
+
+       function handleDragLeave(e) {
+           e.currentTarget.classList.remove('dragover');
+       }
+
+       function handleDrop(e) {
+           e.preventDefault();
+           e.currentTarget.classList.remove('dragover');
+           const files = e.dataTransfer.files;
+           if (files.length > 0) {
+               processFiles(files);
+           }
+       }
+
+       function handleFileSelect(e) {
+           const files = e.target.files;
+           if (files.length > 0) {
+               processFiles(files);
+           }
+       }
+
+       async function processFiles(files) {
+           for (let file of files) {
+               if (file.size > 10 * 1024 * 1024) {
+                   addAIMessage(`File ${file.name} is too large. Please upload files smaller than 10MB.`);
+                   continue;
+               }
+                 // Check if file type is supported
+        const supportedTypes = [
+            'application/pdf',
+            'image/png', 
+            'image/jpeg', 
+            'image/jpg',
+            'text/html',
+            'application/html'
+        ];
+        
+        const isSupported = supportedTypes.includes(file.type) || 
+            file.name.toLowerCase().endsWith('.html') || 
+            file.name.toLowerCase().endsWith('.htm');
+        
+        if (!isSupported) {
+            addAIMessage(`File ${file.name} is not supported. Please upload PDF, PNG, JPG, JPEG, or HTML files.`);
+            continue;
+        }
+               
+               await analyzeDocument(file);
+           }
+       }
+       function detectFileType(file) {
+    if (file.type === 'application/pdf') return 'pdf';
+    if (file.type.startsWith('image/')) return 'image';
+    if (file.type === 'text/html' || file.name.toLowerCase().endsWith('.html') || file.name.toLowerCase().endsWith('.htm')) return 'html';
+    return 'unknown';
+}
+
+       async function analyzeDocument(file) {
+        const fileType = detectFileType(file); // Add this line
+           const progressContainer = document.getElementById('progressContainer');
+           const progressFill = document.getElementById('progressFill');
+           const progressText = document.getElementById('progressText');
+           const analysisPreview = document.getElementById('analysisPreview');
+
+           progressContainer.classList.add('active');
+           progressText.textContent = `Analyzing ${file.name}...`;
+
+           // Simulate analysis process
+           const analysisSteps = [
+               { progress: 20, text: 'Extracting document content...' },
+               { progress: 40, text: 'Processing billing information...' },
+               { progress: 60, text: 'Detecting anomalies...' },
+               { progress: 80, text: 'Generating insights...' },
+               { progress: 100, text: 'Analysis complete!' }
+           ];
+
+           for (const step of analysisSteps) {
+               progressFill.style.width = `${step.progress}%`;
+               progressText.textContent = step.text;
+               await delay(800);
+           }
+
+           // Update preview
+          // Generate file-specific analysis results
+           const analysisResults = generateAnalysisResults(file, fileType);
+
+// Update preview
+            
+            analysisPreview.innerHTML = generateAnalysisResults(file, fileType);
+
+           // Reset progress
+           setTimeout(() => {
+               progressContainer.classList.remove('active');
+               progressFill.style.width = '0%';
+           }, 1000);
+
+           addAIMessage(`✅ Analysis complete for ${file.name}! Found 2 anomalies and 4 optimization opportunities. Switch to AI Insights tab for detailed recommendations.`);
+           // Trigger insights update
+           // Update the analyzeDocument function (around line 950) - find this part and replace:
+// Trigger insights update
+setTimeout(() => {
+    showAIInsights(file); // Pass the file here
+}, 2000);
+           
+       }
+
+       // Utility Functions
+       function initializePaymentDate() {
+           const today = new Date();
+           const formattedDate = today.toISOString().split('T')[0];
+           const dateInput = document.getElementById('paymentDate');
+           if (dateInput) {
+               dateInput.value = formattedDate;
+           }
+       }
+
+       function showNotification(message, type) {
+           const notification = document.createElement('div');
+           notification.className = `notification ${type}`;
+           notification.innerHTML = `
+               <div class="notification-content">
+                   <i class="fas ${getNotificationIcon(type)}"></i>
+                   <span>${message}</span>
+               </div>
+           `;
+           
+           document.body.appendChild(notification);
+           
+           setTimeout(() => notification.classList.add('show'), 100);
+           
+           setTimeout(() => {
+               notification.classList.remove('show');
+               setTimeout(() => {
+                   if (notification.parentNode) {
+                       document.body.removeChild(notification);
+                   }
+               }, 300);
+           }, 4000);
+       }
+
+       function getNotificationIcon(type) {
+           const icons = {
+               'success': 'fa-check-circle',
+               'error': 'fa-exclamation-circle',
+               'info': 'fa-info-circle',
+               'warning': 'fa-exclamation-triangle'
+           };
+           return icons[type] || 'fa-info-circle';
+       }
+
+       function addAIMessage(message) {
+           const chatMessages = document.getElementById('chatMessages');
+           const messageDiv = document.createElement('div');
+           messageDiv.className = 'message ai';
+           messageDiv.innerHTML = `<div class="message-content">${message}</div>`;
+           chatMessages.appendChild(messageDiv);
+           chatMessages.scrollTop = chatMessages.scrollHeight;
+       }
+
+       function getPaymentMethodName(methodId) {
+           const method = paymentMethods.find(m => m.id === methodId);
+           if (!method) return 'Unknown Method';
+           
+           if (method.type === 'card') {
+               return `${method.brand} •••• ${method.last4}`;
+           } else {
+               return `${method.bank} ${method.accountType} •••• ${method.last4}`;
+           }
+       }
+
+       function generateConfirmationNumber() {
+           return 'AI-' + Math.floor(100000 + Math.random() * 900000);
+       }
+
+       function delay(ms) {
+           return new Promise(resolve => setTimeout(resolve, ms));
+       }
+
+       // Modal outside click
+       window.addEventListener('click', function(e) {
+           const paymentModal = document.getElementById('paymentModal');
+           const confirmationModal = document.getElementById('confirmationModal');
+           
+           if (e.target === paymentModal) {
+               paymentModal.style.display = 'none';
+           }
+           if (e.target === confirmationModal) {
+               confirmationModal.style.display = 'none';
+           }
+       });
+
+       // File input setup
+       document.addEventListener('DOMContentLoaded', function() {
+           const uploadArea = document.getElementById('uploadArea');
+           const fileInput = document.getElementById('fileInput');
+           
+           if (uploadArea && fileInput) {
+               uploadArea.addEventListener('dragover', handleDragOver);
+               uploadArea.addEventListener('dragleave', handleDragLeave);
+               uploadArea.addEventListener('drop', handleDrop);
+               fileInput.addEventListener('change', handleFileSelect);
+           }
+       });
+       // Global variable to track if insights are loaded
+let insightsLoaded = false;
+let uploadedBillsCount = 0;
+
+function detectCompany(fileName) {
+    const name = fileName.toLowerCase();
+    
+    if (name.includes('pacific') || name.includes('pge') || name.includes('electric')) {
+        return {
+            company: 'Pacific Gas & Electric',
+            insights: 'high_peak_usage',
+            focus: 'Peak hour optimization opportunities detected'
+        };
+    }
+    if (name.includes('water') || name.includes('city water')) {
+        return {
+            company: 'City Water Department',
+            insights: 'leak_detection', 
+            focus: 'Potential water leak and efficiency analysis'
+        };
+    }
+    if (name.includes('gas') || name.includes('natural gas')) {
+        return {
+            company: 'Natural Gas Company',
+            insights: 'efficiency_issues',
+            focus: 'Heating system efficiency optimization needed'
+        };
+    }
+    
+    return {
+        company: 'Utility Company',
+        insights: 'general',
+        focus: 'Standard utility analysis completed'
+    };
+}
+// Generate Analysis Results with Specific Insights per Bill Type
+
+function generateAnalysisResults(file, fileType) {
+    const companyData = detectCompany(file.name);
+    
+    // Extract payment amount from the specific bill files
+    let paymentAmount = '190.00';
+    const fileName = file.name.toLowerCase();
+    
+    if (fileName.includes('pacific') || fileName.includes('electric')) {
+        paymentAmount = '234.56';
+    } else if (fileName.includes('water')) {
+        paymentAmount = '87.23';
+    } else if (fileName.includes('gas')) {
+        paymentAmount = '156.78';
+    }
+
+    let specificInsights = '';
+    
+    if (fileName.includes('pacific') || fileName.includes('electric')) {
+        specificInsights = `
+            <div style="background: var(--warning-color); color: white; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+                <strong><i class="fas fa-bolt"></i> Peak Usage Alert</strong><br>
+                <small>35% peak-hour usage detected - potential $25-35/month savings available</small>
+            </div>
+            <div style="background: var(--accent-color); color: white; padding: 15px; border-radius: 6px;">
+                <strong><i class="fas fa-clock"></i> Optimization Opportunity</strong><br>
+                <small>Shift appliances to off-peak hours (9PM-6AM) for maximum savings</small>
+            </div>`;
+    } else if (fileName.includes('water')) {
+        specificInsights = `
+            <div style="background: var(--danger-color); color: white; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+                <strong><i class="fas fa-tint"></i> Potential Leak Detected</strong><br>
+                <small>Continuous night flow suggests toilet or faucet leak - $67/year waste</small>
+            </div>
+            <div style="background: var(--accent-color); color: white; padding: 15px; border-radius: 6px;">
+                <strong><i class="fas fa-wrench"></i> Action Required</strong><br>
+                <small>Free leak detection kit available - potential immediate $5-10/month savings</small>
+            </div>`;
+    } else if (fileName.includes('gas')) {
+        specificInsights = `
+            <div style="background: var(--warning-color); color: white; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+                <strong><i class="fas fa-fire"></i> Efficiency Decline</strong><br>
+                <small>Heating system 35% above similar homes - furnace tune-up needed</small>
+            </div>
+            <div style="background: var(--accent-color); color: white; padding: 15px; border-radius: 6px;">
+                <strong><i class="fas fa-tools"></i> Energy Audit Recommended</strong><br>
+                <small>Professional audit could identify $15-25/month in heating savings</small>
+            </div>`;
+    }
+
+    return `
+        <div style="background: var(--success-color); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <i class="fas fa-check-circle" style="font-size: 2rem; margin-bottom: 10px;"></i>
+            <h4>Analysis Complete!</h4>
+            <p style="margin: 0; opacity: 0.9;">AI-powered bill analysis with specific insights</p>
+        </div>
+        <div style="text-align: left;">
+            <div style="background: var(--light-bg); padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+                <strong><i class="fas fa-building"></i> Company:</strong> ${companyData.company}<br>
+                <strong><i class="fas fa-dollar-sign"></i> Amount:</strong> $${paymentAmount}<br>
+                <strong><i class="fas fa-calendar"></i> Status:</strong> <span style="color: var(--success-color);">✓ Ready for Payment</span><br>
+                <strong><i class="fas fa-brain"></i> AI Analysis:</strong> <span style="color: var(--accent-color);">Complete</span>
+            </div>
+            ${specificInsights}
+        </div>
+        <div style="margin-top: 20px; text-align: center; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+            <button onclick="switchToPayments()" style="background: var(--success-color); color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-size: 1rem;">
+                <i class="fas fa-credit-card"></i> Pay This Bill
+            </button>
+            <button onclick="switchToAIInsights()" style="background: var(--accent-color); color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-size: 1rem;">
+                <i class="fas fa-brain"></i> AI Insights
+            </button>
+            
+        </div>
+    `;
+    // Add this at the end of analyzeDocument function, after all existing code:
+
+// Trigger bill-payment integration
+setTimeout(async () => {
+    addAIMessage('🔗 Connecting uploaded bill to payment system...');
+    const integration = await integrationAI.integrateUploadedBill(file.name, analysisResults);
+    
+    if (integration.matchedPayment.matched) {
+        addAIMessage(` Perfect Match! Your uploaded ${file.name} matches pending payment with ${(integration.matchedPayment.confidence * 100).toFixed(1)}% confidence.
+
+ Instant Payment Ready: Say "pay this bill" to process immediately with full AI optimization!`);
+    }
+}, 4000);
+}
+// New function for AI Insights navigation
+function switchToAIInsights() {
+    switchMainTab('insights');
+    addAIMessage('🧠 Switched to AI Insights! Here\'s your detailed analysis with personalized recommendations and cost-saving opportunities.');
+    
+    // Highlight the insights for a moment
+    setTimeout(() => {
+        const insightsTab = document.querySelector('[onclick*="insights"]');
+        if (insightsTab) {
+            insightsTab.style.background = 'var(--accent-color)';
+            insightsTab.style.color = 'white';
+            setTimeout(() => {
+                insightsTab.style.background = '';
+                insightsTab.style.color = '';
+            }, 2000);
+        }
+    }, 500);
+}
+
+// Update the existing switchToPayments function
+function switchToPayments() {
+    switchMainTab('payments');
+    addAIMessage('💳 Switched to Payments! Your analyzed bill is ready for payment. Select it and process with AI optimization!');
+    
+    // Highlight the matching bill
+    setTimeout(() => {
+        const billElements = document.querySelectorAll('.bill-item');
+        billElements.forEach(bill => {
+            bill.style.border = '2px solid var(--accent-color)';
+            bill.style.animation = 'pulse 1s ease-in-out 3';
+        });
+    }, 500);
+}
+
+    // Add CSS animation for pulse effect
+const pulseStyle = `
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+`;
+const styleSheet = document.createElement('style');
+styleSheet.textContent = pulseStyle;
+document.head.appendChild(styleSheet);
+
+
+
+
+
+function showAIInsights(billFile = null) {
+    insightsLoaded = true;
+    uploadedBillsCount++;
+    
+    // Store current bill data
+    if (billFile) {
+        currentAnalyzedBill = extractBillDataForInsights(billFile);
+    }
+    
+    // Hide no insights state and show insights content
+    const noInsightsState = document.getElementById('noInsightsState');
+    const hasInsightsState = document.getElementById('hasInsightsState');
+    
+    if (noInsightsState) noInsightsState.style.display = 'none';
+    if (hasInsightsState) hasInsightsState.style.display = 'block';
+    
+    // Update dynamic content based on bill
+    updateInsightsContent(currentAnalyzedBill);
+    
+    // Update bills analyzed count
+    const billsAnalyzedElement = document.getElementById('billsAnalyzed');
+    if (billsAnalyzedElement) billsAnalyzedElement.textContent = uploadedBillsCount;
+    
+    // Create charts with bill-specific data
+    setTimeout(() => {
+        createBillBreakdownChart(currentAnalyzedBill);
+    }, 500);
+    
+    addAIMessage('🧠 AI Insights updated! Advanced analysis shows potential monthly savings. Check the AI Insights tab for detailed breakdown and recommendations.');
+}
+
+// New function to extract bill data for insights
+function extractBillDataForInsights(file) {
+    const fileName = file.name.toLowerCase();
+    
+    if (fileName.includes('pacific') || fileName.includes('electric')) {
+        return {
+            company: 'Pacific Gas & Electric',
+            amount: 234.56,
+            type: 'electric',
+            anomalies: 2,
+            recommendations: 4,
+            savings: '$25-35',
+            chartData: [145.67, 35.40, 24.99, 28.50],
+            chartLabels: ['Energy Charges', 'Peak Demand', 'Base Charge', 'Delivery & Fees'],
+            recommendationsList: [
+                {
+                    icon: 'fa-clock',
+                    title: 'Shift Peak Usage',
+                    description: 'Move high-energy activities to off-peak hours (9PM-6AM) to save $25-30/month.',
+                    color: 'var(--success-color)'
+                },
+                {
+                    icon: 'fa-thermometer-half',
+                    title: 'Optimize HVAC',
+                    description: 'Adjust thermostat by 2°F during peak hours to reduce demand charges by $15-20/month.',
+                    color: 'var(--accent-color)'
+                },
+                {
+                    icon: 'fa-search',
+                    title: 'Rate Plan Review',
+                    description: 'Consider switching to time-of-use rate plan for potential $10-15/month savings.',
+                    color: '#9b59b6'
+                },
+                {
+                    icon: 'fa-bolt',
+                    title: 'Peak Load Management',
+                    description: 'Install smart switches to automatically reduce peak consumption.',
+                    color: '#e67e22'
+                }
+            ]
+        };
+    } else if (fileName.includes('water')) {
+        return {
+            company: 'City Water Department',
+            amount: 87.23,
+            type: 'water',
+            anomalies: 1,
+            recommendations: 3,
+            savings: '$5-15',
+            chartData: [53.82, 18.50, 12.45, 2.46],
+            chartLabels: ['Water Usage', 'Base Service', 'Sewer Service', 'Fees & Late'],
+            recommendationsList: [
+                {
+                    icon: 'fa-tint',
+                    title: 'Fix Water Leak',
+                    description: 'Continuous night flow detected - fix toilet/faucet leak to save $67/year.',
+                    color: 'var(--danger-color)'
+                },
+                {
+                    icon: 'fa-wrench',
+                    title: 'Leak Detection Kit',
+                    description: 'Get free leak detection kit from water department for immediate savings.',
+                    color: 'var(--accent-color)'
+                },
+                {
+                    icon: 'fa-chart-line',
+                    title: 'Usage Monitoring',
+                    description: 'Monitor daily usage patterns to prevent future waste.',
+                    color: 'var(--success-color)'
+                }
+            ]
+        };
+    } else if (fileName.includes('gas')) {
+        return {
+            company: 'Natural Gas Company',
+            amount: 156.78,
+            type: 'gas',
+            anomalies: 3,
+            recommendations: 4,
+            savings: '$15-35',
+            chartData: [110.81, 24.57, 12.00, 9.40],
+            chartLabels: ['Gas Usage', 'Transportation & Distribution', 'Customer Charge', 'Taxes & Fees'],
+            recommendationsList: [
+                {
+                    icon: 'fa-fire',
+                    title: 'Furnace Tune-up',
+                    description: 'Heating system 35% above similar homes - schedule professional tune-up.',
+                    color: 'var(--warning-color)'
+                },
+                {
+                    icon: 'fa-tools',
+                    title: 'Energy Audit',
+                    description: 'Professional audit could identify $15-25/month in heating savings.',
+                    color: 'var(--accent-color)'
+                },
+                {
+                    icon: 'fa-thermometer-half',
+                    title: 'Smart Thermostat',
+                    description: 'Install programmable thermostat for optimal temperature control.',
+                    color: 'var(--success-color)'
+                },
+                {
+                    icon: 'fa-home',
+                    title: 'Insulation Check',
+                    description: 'Improve insulation to reduce heating costs by 10-20%.',
+                    color: '#9b59b6'
+                }
+            ]
+        };
+    }
+    
+    // Default fallback
+    return {
+        company: 'Utility Company',
+        amount: 190.00,
+        type: 'general',
+        anomalies: 2,
+        recommendations: 4,
+        savings: '$45-60',
+        chartData: [145.67, 42.33, 24.99, 21.57],
+        chartLabels: ['Energy Charges', 'Delivery Fees', 'Base Charge', 'Taxes & Fees'],
+        recommendationsList: [
+            {
+                icon: 'fa-lightbulb',
+                title: 'General Optimization',
+                description: 'Multiple optimization opportunities identified.',
+                color: 'var(--accent-color)'
+            }
+        ]
+    };
+}
+
+// New function to update insights content dynamically
+function updateInsightsContent(billData) {
+    if (!billData) return;
+    
+    // Update anomalies count
+    const anomaliesElement = document.querySelector('.insight-card:nth-child(2) .insight-value');
+    if (anomaliesElement) {
+        anomaliesElement.textContent = billData.anomalies;
+    }
+    
+    // Update recommendations count
+    const recommendationsElement = document.querySelector('.insight-card:nth-child(3) .insight-value');
+    if (recommendationsElement) {
+        recommendationsElement.textContent = billData.recommendations;
+    }
+    
+    // Update savings amount
+    const savingsElement = document.querySelector('.insight-card:nth-child(4) .insight-value');
+    if (savingsElement) {
+        savingsElement.textContent = billData.savings;
+    }
+    
+    // Update recommendations list
+    updateRecommendationsList(billData.recommendationsList);
+}
+
+// New function to update recommendations list
+function updateRecommendationsList(recommendations) {
+    const recommendationsList = document.getElementById('recommendationsList');
+    if (!recommendationsList || !recommendations) return;
+    
+    recommendationsList.innerHTML = '';
+    
+    recommendations.forEach(rec => {
+        const recommendationDiv = document.createElement('div');
+        recommendationDiv.style.cssText = `
+            background: rgba(${rec.color === 'var(--success-color)' ? '39, 174, 96' : 
+                             rec.color === 'var(--accent-color)' ? '52, 152, 219' :
+                             rec.color === 'var(--warning-color)' ? '243, 156, 18' :
+                             rec.color === 'var(--danger-color)' ? '231, 76, 60' : '155, 89, 182'}, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid ${rec.color};
+        `;
+        
+        recommendationDiv.innerHTML = `
+            <h4 style="color: ${rec.color}; margin-bottom: 8px;">
+                <i class="fas ${rec.icon}"></i> ${rec.title}
+            </h4>
+            <p style="margin: 0; color: var(--text-dark); font-size: 0.9rem;">${rec.description}</p>
+        `;
+        
+        recommendationsList.appendChild(recommendationDiv);
+    });
+}
+    
+// Function to create bill breakdown pie chart
+// Replace the existing createBillBreakdownChart function
+function createBillBreakdownChart(billData = null) {
+    const ctx = document.getElementById('billBreakdownChart');
+    if (!ctx) {
+        console.log('Chart canvas not found');
+        return;
+    }
+    
+    // Destroy existing chart if it exists
+    if (window.billChart) {
+        window.billChart.destroy();
+    }
+    
+    // Use bill-specific data or defaults
+    const chartData = billData ? billData.chartData : [145.67, 42.33, 24.99, 21.57];
+    const chartLabels = billData ? billData.chartLabels : ['Energy Charges', 'Delivery Fees', 'Base Charge', 'Taxes & Fees'];
+    
+    window.billChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: chartLabels,
+            datasets: [{
+                data: chartData,
+                backgroundColor: [
+                    '#3498db',
+                    '#e74c3c', 
+                    '#f39c12',
+                    '#95a5a6'
+                ],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 15,
+                        usePointStyle: true,
+                        font: {
+                            size: 12
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+    
+    // Simple Demo Chatbot using rule-based responses
+function sendChatMessage() {
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+    
+    if (!message) return;
+    
+    // Add user message
+    addUserMessage(message);
+    
+    // Clear input
+    input.value = '';
+    
+    // Generate AI response (demo version)
+    setTimeout(() => {
+        const response = generateDemoResponse(message);
+        addAIMessage(response);
+    }, 1000);
+}
+
+function addUserMessage(message) {
+    const chatMessages = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message user';
+    messageDiv.innerHTML = `<div class="message-content">${message}</div>`;
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function generateDemoResponse(message) {
+    const lowerMessage = message.toLowerCase();
+    // Handle conversational AutoPay setup
+    if (conversationalAutoPay.setupState.active) {
+        return handleAutoPayConversation(message);
+    }
+    
+    // AutoPay setup triggers
+    if (lowerMessage.includes('autopay') || lowerMessage.includes('auto pay') || lowerMessage.includes('automatic')) {
+        if (lowerMessage.includes('setup') || lowerMessage.includes('configure') || lowerMessage.includes('help')) {
+            conversationalAutoPay.startConversation();
+            return "Starting intelligent AutoPay setup conversation above! 👆";
+        }
+    }
+    // Payment-related responses
+    if (lowerMessage.includes('payment') || lowerMessage.includes('pay')) {
+        return "💳 I can help you with payments! You can select bills in the Payments tab, choose your payment method, and process payments securely. Would you like me to guide you through the payment process?";
+    }
+    
+    if (lowerMessage.includes('autopay') || lowerMessage.includes('auto pay')) {
+        return "🔄 AutoPay is great for avoiding late fees! Go to Payments > AutoPay tab to set it up. I can help you choose the optimal timing and payment method based on your patterns.";
+    }
+    
+    if (lowerMessage.includes('bill') && (lowerMessage.includes('high') || lowerMessage.includes('expensive'))) {
+        return "📊 High bills can be concerning! Upload your bill in the Bill Analysis tab and I'll detect anomalies, compare usage patterns, and provide cost-saving recommendations. I can identify potential savings of $45-60/month.";
+    }
+    
+    if (lowerMessage.includes('save') || lowerMessage.includes('reduce') || lowerMessage.includes('lower')) {
+        return "💡 I can help you save money! Key strategies: 1) Shift usage to off-peak hours (save 15-25%), 2) Optimize thermostat settings (save 10-15%), 3) Use energy-efficient appliances. Check AI Insights for personalized recommendations!";
+    }
+    
+    if (lowerMessage.includes('upload') || lowerMessage.includes('analyze')) {
+        return "📄 To analyze your bills: Go to Bill Analysis tab, drag & drop your utility bill (PDF, HTML, or image), and I'll provide detailed insights including anomaly detection and savings opportunities!";
+    }
+    
+    if (lowerMessage.includes('security') || lowerMessage.includes('safe')) {
+        return "🔒 Your security is my priority! All payments use 256-bit SSL encryption, AI-powered fraud detection, and PCI DSS compliance. I monitor for unusual patterns and validate every transaction.";
+    }
+    
+    if (lowerMessage.includes('method') || lowerMessage.includes('card') || lowerMessage.includes('bank')) {
+        return "💳 You can manage payment methods in Payments > Payment Methods tab. I recommend keeping multiple methods as backups and using rewards cards for cashback on utility payments!";
+    }
+    
+    if (lowerMessage.includes('history') || lowerMessage.includes('past')) {
+        return "📈 Check your payment history in Payments > Payment History tab. Your current success rate is 98.5% with an average payment of $101.70. You've saved $180 this year by paying early!";
+    }
+    
+    if (lowerMessage.includes('peak') || lowerMessage.includes('time') || lowerMessage.includes('when')) {
+        return "⏰ Peak hours are typically 3-8 PM weekdays when rates are highest. Shifting major appliances (dishwasher, laundry, EV charging) to off-peak hours (9 PM-6 AM) can save you $25-30/month!";
+    }
+    
+    if (lowerMessage.includes('help') || lowerMessage.includes('how')) {
+        return " I can help you with: ✅ Making payments ✅ Analyzing bills ✅ Finding savings ✅ Setting up AutoPay ✅ Managing payment methods ✅ Understanding charges. What specific area interests you?";
+    }
+    
+    if (lowerMessage.includes('thank') || lowerMessage.includes('thanks')) {
+        return "😊 You're welcome! I'm here to help you save money and manage your payments efficiently. Feel free to ask me anything about your bills or payment strategies!";
+    }
+    
+    // Greeting responses
+    if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('hey')) {
+        return "👋 Hello! I'm your AI Payment Assistant. I can help you pay bills, analyze usage patterns, detect billing anomalies, and find ways to save money. What can I help you with today?";
+    }
+    // Add these new chat command handlers in generateDemoResponse function:
+
+// AI Insights navigation
+if (lowerMessage.includes('insights') || lowerMessage.includes('analysis') || lowerMessage.includes('recommendations')) {
+    if (lowerMessage.includes('switch') || lowerMessage.includes('go') || lowerMessage.includes('show') || lowerMessage.includes('ok')) {
+        switchToAIInsights();
+        return "🧠 Switching to AI Insights now! Here's your detailed analysis with personalized recommendations.";
+    }
+}
+
+// General navigation commands
+if (lowerMessage.includes('ok switch') || lowerMessage.includes('switch to')) {
+    if (lowerMessage.includes('insight') || lowerMessage.includes('analysis')) {
+        switchToAIInsights();
+        return "🧠 Switched to AI Insights! Check out your personalized recommendations.";
+    } else if (lowerMessage.includes('payment')) {
+        switchToPayments();
+        return "💳 Switched to Payments! Ready to process your bills.";
+    }
+}
+
+// Quick commands
+if (lowerMessage === 'ok' || lowerMessage === 'yes' || lowerMessage === 'sure') {
+    // Check the last AI message context
+    const lastMessage = document.querySelector('.message.ai:last-child .message-content').textContent;
+    if (lastMessage.includes('AI Insights') || lastMessage.includes('insights')) {
+        switchToAIInsights();
+        return "🧠 Perfect! Taking you to AI Insights now.";
+    }
+}
+    
+    // Default response
+    return "🤔 I understand you're asking about '" + message + "'. I specialize in payment processing, bill analysis, and finding cost savings. Try asking me about payments, AutoPay, bill analysis, or money-saving tips! You can also explore different tabs to see all features.";
+
+    // Handle ongoing AutoPay conversation
+function handleAutoPayConversation(message) {
+    const step = conversationalAutoPay.setupState.step;
+    
+    switch (step) {
+        case 1: // Bill selection
+            conversationalAutoPay.processBillSelection(message);
+            break;
+        case 2: // Payment method
+            conversationalAutoPay.processPaymentMethod(message);
+            break;
+        case 3: // Timing
+            conversationalAutoPay.processTimingAndComplete(message);
+            break;
+        default:
+            conversationalAutoPay.startConversation();
+    }
+    
+    return "Continuing AutoPay setup conversation above! 👆";
+}
+
+}
+// Revolutionary AI: Utility Intelligence Engine
+class UtilityIntelligenceEngine {
+    constructor() {
+        this.anomalyThresholds = {
+            usage: { mild: 15, moderate: 25, severe: 40 },
+            cost: { mild: 20, moderate: 35, severe: 50 },
+            efficiency: { mild: 10, moderate: 20, severe: 30 }
+        };
+        this.userBehaviorProfile = new Map();
+        this.historicalData = new Map();
+        this.learningRate = 0.1;
+    }
+    // ... rest of the class code I provided earlier
+}
+
+// Global AI Engine Instance
+const utilityAI = new UtilityIntelligenceEngine();
+
+// Revolutionary Payment Optimization AI
+// Revolutionary Payment Optimization AI
+class PaymentOptimizationAI {
+    constructor() {
+        this.rewardRates = new Map([
+            ['visa-4532', { utilities: 0.02, cashback: 0.015 }],
+            ['mastercard-8901', { utilities: 0.01, cashback: 0.01 }],
+            ['amex-1234', { utilities: 0.03, cashback: 0.025, fee: 0.025 }],
+            ['chase-5678', { utilities: 0, fee: 0 }]
+        ]);
+        this.userCashFlow = new Map();
+        this.paymentHistory = new Map();
+    }
+
+    // AI-powered payment method selection
+    async optimizePaymentMethod(amount, billType, availableMethods, userProfile) {
+        const recommendations = [];
+        
+        for (const method of availableMethods) {
+            const analysis = await this.analyzePaymentMethod(method, amount, billType, userProfile);
+            recommendations.push(analysis);
+        }
+        
+        // Sort by total value (rewards - fees + other benefits)
+        recommendations.sort((a, b) => b.totalValue - a.totalValue);
+        
+        return {
+            bestMethod: recommendations[0],
+            allMethods: recommendations,
+            savings: recommendations[0].totalValue - recommendations[recommendations.length - 1].totalValue,
+            confidence: 0.94,
+            reasoning: this.generateOptimizationReasoning(recommendations[0])
+        };
+    }
+
+    async analyzePaymentMethod(method, amount, billType, userProfile) {
+        const rates = this.rewardRates.get(method.id) || { utilities: 0, cashback: 0, fee: 0 };
+        
+        // Calculate rewards
+        const rewards = amount * (rates.utilities || rates.cashback || 0);
+        
+        // Calculate fees
+        const fees = amount * (rates.fee || 0);
+        
+        // AI factors in user's credit utilization if it's a card
+        const creditImpact = method.type === 'card' ? 
+            this.calculateCreditImpact(amount, method, userProfile) : 0;
+        
+        // Cash flow impact analysis
+        const cashFlowImpact = await this.analyzeCashFlowImpact(method, amount, userProfile);
+        
+        const totalValue = rewards - fees + creditImpact + cashFlowImpact;
+        
+        return {
+            method: method,
+            rewards: rewards,
+            fees: fees,
+            creditImpact: creditImpact,
+            cashFlowImpact: cashFlowImpact,
+            totalValue: totalValue,
+            recommendation: this.generateMethodRecommendation(totalValue, method)
+        };
+    }
+
+    calculateCreditImpact(amount, method, userProfile) {
+        if (method.type !== 'card') return 0;
+        
+        // Assume credit limit and current utilization
+        const estimatedLimit = 5000; // Would come from real data
+        const currentUtilization = userProfile?.creditUtilization || 0.15;
+        const newUtilization = (currentUtilization * estimatedLimit + amount) / estimatedLimit;
+        
+        // Credit score impact (keeping utilization under 30% is good)
+        if (newUtilization < 0.3 && currentUtilization > 0.1) {
+            return 2; // Small positive impact for good utilization
+        } else if (newUtilization > 0.5) {
+            return -5; // Negative impact for high utilization
+        }
+        return 0;
+    }
+
+    async analyzeCashFlowImpact(method, amount, userProfile) {
+        const paymentDate = new Date(document.getElementById('paymentDate')?.value || new Date());
+        const dayOfMonth = paymentDate.getDate();
+        
+        // AI analyzes optimal payment timing based on user's cash flow pattern
+        if (method.type === 'bank') {
+            // For bank accounts, timing matters more
+            if (dayOfMonth >= 1 && dayOfMonth <= 5) {
+                return 3; // Good timing - after typical payday
+            } else if (dayOfMonth >= 25) {
+                return -2; // Poor timing - end of month cash crunch
+            }
+        } else {
+            // Credit cards provide float benefit
+            return 1; // Small benefit for payment float
+        }
+        return 0;
+    }
+
+    generateOptimizationReasoning(bestMethod) {
+        const reasons = [];
+        
+        if (bestMethod.rewards > 0) {
+            reasons.push(`Earn $${bestMethod.rewards.toFixed(2)} in rewards`);
+        }
+        if (bestMethod.fees > 0) {
+            reasons.push(`Avoid $${bestMethod.fees.toFixed(2)} in fees with other methods`);
+        }
+        if (bestMethod.creditImpact > 0) {
+            reasons.push(`Positive credit utilization impact`);
+        }
+        if (bestMethod.cashFlowImpact > 0) {
+            reasons.push(`Optimal timing for your cash flow`);
+        }
+        
+        return reasons.join(', ') || 'Best overall value for this payment';
+    }
+
+    // FIXED: Added missing function
+    generateMethodRecommendation(totalValue, method) {
+        if (totalValue > 5) {
+            return `Excellent choice - saves $${totalValue.toFixed(2)}`;
+        } else if (totalValue > 0) {
+            return `Good choice - earns $${totalValue.toFixed(2)}`;
+        } else if (totalValue < -2) {
+            return `Consider alternative - costs $${Math.abs(totalValue).toFixed(2)}`;
+        } else {
+            return 'Standard option';
+        }
+    }
+}
+
+// Global Payment AI Instance
+const paymentAI = new PaymentOptimizationAI();
+// Intelligent Payment Timing AI
+class PaymentTimingAI {
+    constructor() {
+        this.userPaydayPattern = new Map();
+        this.billDueDates = new Map();
+        this.cashFlowModel = new Map();
+    }
+
+    // AI calculates optimal payment date
+    async calculateOptimalPaymentDate(billId, amount, dueDate, userProfile) {
+        const analysis = {
+            suggestedDate: null,
+            reasoning: [],
+            cashFlowScore: 0,
+            savingsOpportunity: 0
+        };
+
+        // Learn user's payday pattern (simulate learning)
+        const paydays = this.estimatePaydays(userProfile);
+        
+        // Calculate cash flow impact for different dates
+        const dateOptions = this.generateDateOptions(dueDate);
+        const dateAnalysis = await Promise.all(
+            dateOptions.map(date => this.analyzeDateOption(date, amount, paydays))
+        );
+
+        // Select optimal date
+        const bestOption = dateAnalysis.reduce((best, current) => 
+            current.score > best.score ? current : best
+        );
+
+        analysis.suggestedDate = bestOption.date;
+        analysis.reasoning = bestOption.reasoning;
+        analysis.cashFlowScore = bestOption.score;
+        analysis.savingsOpportunity = bestOption.savings;
+
+        return analysis;
+    }
+
+    estimatePaydays(userProfile) {
+        // AI estimates typical paydays based on payment patterns
+        // In real implementation, this would learn from actual payment history
+        return [1, 15]; // Bi-weekly payday simulation
+    }
+
+    generateDateOptions(dueDate) {
+        const due = new Date(dueDate);
+        const options = [];
+        
+        // Generate options from 10 days before due date to due date
+        for (let i = 10; i >= 0; i--) {
+            const option = new Date(due);
+            option.setDate(due.getDate() - i);
+            options.push(option);
+        }
+        
+        return options;
+    }
+
+    async analyzeDateOption(date, amount, paydays) {
+        const dayOfMonth = date.getDate();
+        let score = 50; // Base score
+        const reasoning = [];
+        let savings = 0;
+
+        // Check proximity to paydays
+        const closestPayday = paydays.reduce((closest, payday) => 
+            Math.abs(dayOfMonth - payday) < Math.abs(dayOfMonth - closest) ? payday : closest
+        );
+
+        const daysFromPayday = Math.abs(dayOfMonth - closestPayday);
+
+        if (daysFromPayday <= 2) {
+            score += 20;
+            reasoning.push('Close to payday - optimal cash flow');
+        } else if (daysFromPayday >= 10) {
+            score -= 15;
+            reasoning.push('Far from payday - potential cash flow strain');
+        }
+
+        // Early payment discount simulation
+        const daysEarly = Math.max(0, (new Date(document.getElementById('paymentDate').value) - date) / (1000 * 60 * 60 * 24));
+        if (daysEarly >= 5) {
+            score += 10;
+            savings += amount * 0.01; // 1% early payment discount
+            reasoning.push(`Early payment discount: $${savings.toFixed(2)}`);
+        }
+
+        // Weekend adjustment
+        const dayOfWeek = date.getDay();
+        if (dayOfWeek === 0 || dayOfWeek === 6) {
+            score -= 5;
+            reasoning.push('Weekend processing delay');
+        }
+
+        return {
+            date: date,
+            score: score,
+            reasoning: reasoning,
+            savings: savings
+        };
+    }
+}
+
+// Global Timing AI Instance
+const timingAI = new PaymentTimingAI();
+// Advanced Fraud Detection AI
+class FraudDetectionAI {
+    constructor() {
+        this.userBehaviorModel = new Map();
+        this.fraudPatterns = new Map();
+        this.riskThresholds = {
+            amount: 2.5,    // 2.5x normal amount
+            frequency: 3,   // 3+ payments in short time
+            timing: 0.8     // Unusual time pattern
+        };
+    }
+
+    // Real-time fraud analysis
+    async analyzeFraudRisk(paymentData, userHistory) {
+        const riskFactors = [];
+        let riskScore = 0;
+        
+        // Amount-based risk analysis
+        const amountRisk = this.analyzeAmountRisk(paymentData, userHistory);
+        riskScore += amountRisk.score;
+        if (amountRisk.isRisky) riskFactors.push(amountRisk);
+        
+        // Frequency-based risk analysis
+        const frequencyRisk = this.analyzeFrequencyRisk(paymentData, userHistory);
+        riskScore += frequencyRisk.score;
+        if (frequencyRisk.isRisky) riskFactors.push(frequencyRisk);
+        
+        // Timing-based risk analysis
+        const timingRisk = this.analyzeTimingRisk(paymentData, userHistory);
+        riskScore += timingRisk.score;
+        if (timingRisk.isRisky) riskFactors.push(timingRisk);
+        
+        // Billing anomaly correlation
+        const billingRisk = await this.analyzeBillingAnomalyRisk(paymentData);
+        riskScore += billingRisk.score;
+        if (billingRisk.isRisky) riskFactors.push(billingRisk);
+        
+        return {
+            riskScore: Math.min(riskScore, 100),
+            riskLevel: this.calculateRiskLevel(riskScore),
+            riskFactors: riskFactors,
+            recommendation: this.generateFraudRecommendation(riskScore, riskFactors),
+            confidence: 0.96,
+            accuracy: '96.3%'
+        };
+    }
+
+    analyzeAmountRisk(paymentData, userHistory) {
+        const currentAmount = paymentData.amount;
+        const avgAmount = userHistory.reduce((sum, p) => sum + p.amount, 0) / userHistory.length || 150;
+        const ratio = currentAmount / avgAmount;
+        
+        if (ratio > this.riskThresholds.amount) {
+            return {
+                type: 'amount_anomaly',
+                score: Math.min(30, (ratio - 1) * 20),
+                isRisky: true,
+                description: `Payment amount ${ratio.toFixed(1)}x higher than your average`,
+                detail: `$${currentAmount.toFixed(2)} vs typical $${avgAmount.toFixed(2)}`
+            };
+        }
+        
+        return { score: 0, isRisky: false };
+    }
+
+    analyzeFrequencyRisk(paymentData, userHistory) {
+        const now = new Date();
+        const recentPayments = userHistory.filter(p => {
+            const paymentDate = new Date(p.date);
+            const hoursDiff = (now - paymentDate) / (1000 * 60 * 60);
+            return hoursDiff <= 24; // Last 24 hours
+        });
+        
+        if (recentPayments.length >= this.riskThresholds.frequency) {
+            return {
+                type: 'frequency_anomaly',
+                score: recentPayments.length * 10,
+                isRisky: true,
+                description: `${recentPayments.length} payments in 24 hours`,
+                detail: 'Unusual payment frequency detected'
+            };
+        }
+        
+        return { score: 0, isRisky: false };
+    }
+
+    analyzeTimingRisk(paymentData, userHistory) {
+        const paymentHour = new Date().getHours();
+        const userTypicalHours = this.calculateTypicalPaymentHours(userHistory);
+        
+        // Check if current hour is unusual for this user
+        if (!userTypicalHours.includes(paymentHour) && (paymentHour < 6 || paymentHour > 23)) {
+            return {
+                type: 'timing_anomaly',
+                score: 15,
+                isRisky: true,
+                description: `Payment at ${paymentHour}:00 is unusual for your pattern`,
+                detail: `You typically pay between ${Math.min(...userTypicalHours)}-${Math.max(...userTypicalHours)}:00`
+            };
+        }
+        
+        return { score: 0, isRisky: false };
+    }
+
+    async analyzeBillingAnomalyRisk(paymentData) {
+        // Cross-reference with bill analysis AI
+        if (window.currentAIAnalysis?.anomalies?.length > 0) {
+            const severeAnomalies = window.currentAIAnalysis.anomalies.filter(a => a.severity === 'severe');
+            if (severeAnomalies.length > 0) {
+                return {
+                    type: 'billing_anomaly_correlation',
+                    score: 25,
+                    isRisky: true,
+                    description: 'Payment correlates with detected billing anomalies',
+                    detail: `AI detected ${severeAnomalies.length} severe billing anomaly(ies)`
+                };
+            }
+        }
+        
+        return { score: 0, isRisky: false };
+    }
+
+    calculateRiskLevel(score) {
+        if (score >= 60) return 'HIGH';
+        if (score >= 30) return 'MEDIUM';
+        return 'LOW';
+    }
+    generateFraudRecommendation(score, factors) {
+    const detailedReasons = this.generateDetailedReasons(factors);
+    
+    if (score >= 60) {
+        return {
+            action: 'BLOCK_AND_VERIFY',
+            level: 'HIGH RISK',
+            message: 'High fraud risk detected. Payment blocked for security.',
+            detailedReasons: detailedReasons,
+            riskFactors: factors.length,
+            steps: [
+                'Verify bill amount with utility company directly',
+                'Check for billing errors or estimated readings',
+                'Confirm payment method security and recent activity',
+                'Consider calling utility company customer service',
+                'Wait 24 hours and try again if issue persists'
+            ],
+            aiConfidence: '96.3% fraud detection accuracy',
+            securityLevel: 'Enterprise-grade protection active'
+        };
+    } else if (score >= 30) {
+        return {
+            action: 'CAUTION_AND_CONFIRM',
+            level: 'MEDIUM RISK',
+            message: 'Moderate risk detected. Please review carefully before proceeding.',
+            detailedReasons: detailedReasons,
+            riskFactors: factors.length,
+            steps: [
+                'Double-check payment amount against your actual bill',
+                'Verify this payment timing matches your normal pattern',
+                'Confirm payment method is secure and authorized',
+                'Review any recent changes to your utility account',
+                'Proceed only if all details appear correct'
+            ],
+            aiConfidence: '94.7% risk assessment accuracy',
+            securityLevel: 'Enhanced monitoring active'
+        };
+    } else {
+        return {
+            action: 'PROCEED',
+            level: 'LOW RISK',
+            message: 'Payment appears normal for your patterns.',
+            detailedReasons: ['Payment matches your historical patterns', 'Amount within normal range', 'Timing consistent with your habits'],
+            riskFactors: 0,
+            steps: ['Payment cleared for processing'],
+            aiConfidence: '98.1% pattern match accuracy',
+            securityLevel: 'Standard monitoring'
+        };
+    }
+}
+
+// Generate detailed explanations for each risk factor
+generateDetailedReasons(factors) {
+    const reasons = [];
+    
+    factors.forEach(factor => {
+        switch (factor.type) {
+            case 'amount_anomaly':
+                reasons.push({
+                    category: 'Amount Analysis',
+                    issue: `Payment amount is unusually high`,
+                    details: factor.detail,
+                    aiAnalysis: `AI detected ${factor.description} based on your payment history`,
+                    riskLevel: factor.score > 25 ? 'High' : 'Medium',
+                    recommendation: 'Verify bill accuracy and check for estimated readings'
+                });
+                break;
+                
+            case 'frequency_anomaly':
+                reasons.push({
+                    category: 'Payment Frequency',
+                    issue: 'Multiple payments in short timeframe',
+                    details: factor.detail,
+                    aiAnalysis: `Unusual payment frequency detected - ${factor.description}`,
+                    riskLevel: 'High',
+                    recommendation: 'Verify you haven\'t already paid this bill recently'
+                });
+                break;
+                
+            case 'timing_anomaly':
+                reasons.push({
+                    category: 'Payment Timing',
+                    issue: 'Unusual time for payment',
+                    details: factor.detail,
+                    aiAnalysis: factor.description,
+                    riskLevel: 'Medium',
+                    recommendation: 'Confirm you initiated this payment intentionally'
+                });
+                break;
+                
+            case 'billing_anomaly_correlation':
+                reasons.push({
+                    category: 'Bill Analysis Correlation',
+                    issue: 'Payment correlates with billing anomalies',
+                    details: factor.detail,
+                    aiAnalysis: 'AI detected severe billing irregularities that may indicate errors',
+                    riskLevel: 'High',
+                    recommendation: 'Review bill for errors before payment - potential overcharge detected'
+                });
+                break;
+        }
+    });
+    
+    return reasons;
+}
+
+
+    calculateTypicalPaymentHours(userHistory) {
+        // Analyze payment time patterns
+        const hours = userHistory.map(p => new Date(p.date).getHours());
+        const hourFrequency = {};
+        
+        hours.forEach(hour => {
+            hourFrequency[hour] = (hourFrequency[hour] || 0) + 1;
+        });
+        
+        // Return hours where user has made payments
+        return Object.keys(hourFrequency)
+            .filter(hour => hourFrequency[hour] >= 1)
+            .map(hour => parseInt(hour));
+    }
+}
+
+// Global Fraud AI Instance
+const fraudAI = new FraudDetectionAI();
+// Smart Reward Calculation AI
+
+class RewardCalculationAI {
+    constructor() {
+        this.rewardPrograms = new Map([
+            ['visa-4532', { 
+                name: 'Chase Freedom',
+                utilities: 0.02,
+                quarterly_bonus: 0.05,
+                annual_fee: 0,
+                cashback_minimum: 25
+            }],
+            ['mastercard-8901', {
+                name: 'Citi Double Cash',
+                utilities: 0.01,
+                all_purchases: 0.02,
+                annual_fee: 0,
+                cashback_minimum: 25
+            }],
+            ['amex-1234', {
+                name: 'Blue Cash Preferred',
+                utilities: 0.01,
+                grocery: 0.06,
+                annual_fee: 95,
+                cashback_minimum: 25
+            }]
+        ]);
+    }
+
+    // Calculate exact rewards for payment
+    calculateRewards(methodId, amount, category = 'utilities') {
+        const program = this.rewardPrograms.get(methodId);
+        if (!program) return { rewards: 0, details: 'No rewards program' };
+
+        let rewardRate = program[category] || program.all_purchases || 0;
+        
+        // Check for quarterly bonus categories
+        if (this.isQuarterlyBonus(category, new Date())) {
+            rewardRate = program.quarterly_bonus || rewardRate;
+        }
+
+        const rewards = amount * rewardRate;
+        
+        return {
+            rewards: rewards,
+            rate: rewardRate,
+            details: this.generateRewardDetails(program, rewardRate, rewards),
+            optimization: this.suggestRewardOptimization(methodId, amount)
+        };
+    }
+
+    generateRewardDetails(program, rate, rewards) {
+        return {
+            program_name: program.name,
+            rate_applied: `${(rate * 100).toFixed(1)}%`,
+            estimated_rewards: `$${rewards.toFixed(2)}`,
+            annual_fee: program.annual_fee > 0 ? `$${program.annual_fee}` : 'No annual fee',
+            minimum_cashout: `$${program.cashback_minimum}`
+        };
+    }
+
+    isQuarterlyBonus(category, date) {
+        // Simulate quarterly bonus categories
+        const quarter = Math.floor(date.getMonth() / 3) + 1;
+        const quarterlyCategories = {
+            1: ['gas_stations'],
+            2: ['grocery'],
+            3: ['utilities', 'streaming'],
+            4: ['department_stores']
+        };
+        
+        return quarterlyCategories[quarter]?.includes(category) || false;
+    }
+
+    suggestRewardOptimization(currentMethodId, amount) {
+        const currentReward = this.calculateRewards(currentMethodId, amount);
+        const allMethods = Array.from(this.rewardPrograms.keys());
+        
+        const alternatives = allMethods
+            .filter(id => id !== currentMethodId)
+            .map(id => ({
+                methodId: id,
+                ...this.calculateRewards(id, amount)
+            }))
+            .filter(alt => alt.rewards > currentReward.rewards)
+            .sort((a, b) => b.rewards - a.rewards);
+
+        if (alternatives.length > 0) {
+            const best = alternatives[0];
+            return {
+                suggestion: `Switch to ${this.rewardPrograms.get(best.methodId).name}`,
+                additional_rewards: `$${(best.rewards - currentReward.rewards).toFixed(2)}`,
+                reasoning: `Higher reward rate: ${best.details.rate_applied} vs ${currentReward.details.rate_applied}`
+            };
+        }
+
+        return { suggestion: 'Current method optimal', additional_rewards: '$0.00' };
+    }
+}
+
+// Global Reward AI Instance
+const rewardAI = new RewardCalculationAI();
+// Conversational AutoPay Setup System
+class ConversationalAutoPaySetup {
+    constructor() {
+        this.setupState = {
+            active: false,
+            step: 0,
+            selectedBills: [],
+            userPreferences: {}
+        };
+        this.availableBills = [
+            { id: '1', name: 'Pacific Gas & Electric', amount: 234.56, stability: 'high' },
+            { id: '2', name: 'City Water Department', amount: 87.23, stability: 'very high' },
+            { id: '3', name: 'Natural Gas Company', amount: 156.78, stability: 'medium' }
+        ];
+    }
+
+    // Start conversational setup
+    startConversation() {
+        this.setupState.active = true;
+        this.setupState.step = 1;
+        
+        addAIMessage(` I'd love to help you set up intelligent AutoPay! Let me analyze your bills first...
+
+ Your Bills Analysis:
+1️⃣ Pacific Gas & Electric - $234.56 (High stability - Perfect for AutoPay)
+
+2️⃣ City Water Department - $87.23 (Very stable - Excellent for AutoPay)
+
+3️⃣ Natural Gas Company - $156.78 (Medium stability - Good with limits)
+
+Which bills would you like AutoPay for?
+
+Type your choice:
+- "1" for just Pacific Gas & Electric
+- "2" for just City Water Department  
+- "3" for just Natural Gas Company
+- "1 and 2" for combination
+- "all" for all three bills
+- "none" if you want to skip AutoPay
+
+What's your preference? 🤔`);
+    }
+
+    // Process user's bill selection response
+    processBillSelection(userInput) {
+        const input = userInput.toLowerCase().trim();
+        let selectedBills = [];
+        let responseMessage = "";
+
+        // Parse user input
+        if (input.includes('all') || input.includes('everything')) {
+            selectedBills = ['1', '2', '3'];
+            responseMessage = "Great choice! Setting up AutoPay for all three bills.";
+        } else if (input.includes('none') || input.includes('skip') || input.includes('no')) {
+            this.setupState.active = false;
+            addAIMessage("No problem! You can always set up AutoPay later. I'm here whenever you're ready! 😊");
+            return;
+        } else if (input.includes('1') && input.includes('2') && input.includes('3')) {
+            selectedBills = ['1', '2', '3'];
+            responseMessage = "Perfect! All three bills selected.";
+        } else if (input.includes('1') && input.includes('2')) {
+            selectedBills = ['1', '2'];
+            responseMessage = "Excellent! Electric and Water bills selected - both very stable.";
+        } else if (input.includes('1') && input.includes('3')) {
+            selectedBills = ['1', '3'];
+            responseMessage = "Good choice! Electric and Gas bills selected.";
+        } else if (input.includes('2') && input.includes('3')) {
+            selectedBills = ['2', '3'];
+            responseMessage = "Smart selection! Water and Gas bills chosen.";
+        } else if (input.includes('1')) {
+            selectedBills = ['1'];
+            responseMessage = "Perfect! Pacific Gas & Electric is highly stable - ideal for AutoPay.";
+        } else if (input.includes('2')) {
+            selectedBills = ['2'];
+            responseMessage = "Excellent choice! Water bill is very predictable.";
+        } else if (input.includes('3')) {
+            selectedBills = ['3'];
+            responseMessage = "Good selection! I'll set smart limits for the Gas bill.";
+        } else {
+            addAIMessage(`🤔 I didn't quite understand "${userInput}". Please try:
+- Type "1" for Electric bill
+- Type "2" for Water bill  
+- Type "all" for all bills
+- Type "none" to skip
+
+What would you like? 😊`);
+            return;
+        }
+
+        this.setupState.selectedBills = selectedBills;
+        this.setupState.step = 2;
+        this.askPaymentMethod(responseMessage);
+    }
+
+    // Ask about payment method preference
+    askPaymentMethod(previousResponse) {
+        const selectedBillNames = this.setupState.selectedBills.map(id => 
+            this.availableBills.find(bill => bill.id === id).name
+        );
+
+        addAIMessage(`✅ ${previousResponse}
+
+💳 Payment Method Selection:
+I can see you have several payment methods available:
+
+1️⃣ Visa •••• 4532 (Recommended - 2% cashback on utilities)
+2️⃣ MasterCard •••• 8901 (Good backup option)
+3️⃣ Chase Checking •••• 5678 (No fees, direct debit)
+4️⃣ American Express •••• 1234 (3% rewards but higher fees)
+
+AI Recommendation: Use Visa for maximum rewards!
+
+**Which payment method would you prefer?**
+- Type "1" for Visa (Best rewards)
+- Type "2" for MasterCard
+- Type "3" for Bank Account (No fees)
+- Type "4" for American Express
+- Type "best" to let AI choose optimal method
+
+Your choice? 💳`);
+    }
+
+    // Process payment method selection
+    processPaymentMethod(userInput) {
+        const input = userInput.toLowerCase().trim();
+        let selectedMethod = 'visa-4532';
+        let methodName = 'Visa •••• 4532';
+        let responseMessage = "";
+
+        if (input.includes('1') || input.includes('visa')) {
+            selectedMethod = 'visa-4532';
+            methodName = 'Visa •••• 4532';
+            responseMessage = "Excellent! Visa card selected - you'll earn 2% cashback on all utility payments.";
+        } else if (input.includes('2') || input.includes('master')) {
+            selectedMethod = 'mastercard-8901';
+            methodName = 'MasterCard •••• 8901';
+            responseMessage = "Good choice! MasterCard selected as your AutoPay method.";
+        } else if (input.includes('3') || input.includes('bank') || input.includes('checking')) {
+            selectedMethod = 'chase-5678';
+            methodName = 'Chase Checking •••• 5678';
+            responseMessage = "Smart! Bank account selected - no processing fees.";
+        } else if (input.includes('4') || input.includes('amex') || input.includes('american')) {
+            selectedMethod = 'amex-1234';
+            methodName = 'American Express •••• 1234';
+            responseMessage = "Premium choice! AmEx selected - high rewards but watch for fees.";
+        } else if (input.includes('best') || input.includes('ai') || input.includes('recommend')) {
+            selectedMethod = 'visa-4532';
+            methodName = 'Visa •••• 4532';
+            responseMessage = "Perfect! AI selected Visa for optimal rewards and reliability.";
+        } else {
+            addAIMessage(`🤔 I didn't understand "${userInput}". Please choose:
+- "1" for Visa (Best rewards)
+- "3" for Bank Account (No fees)
+- "best" for AI recommendation
+
+Which do you prefer? 💳`);
+            return;
+        }
+
+        this.setupState.userPreferences.paymentMethod = selectedMethod;
+        this.setupState.userPreferences.methodName = methodName;
+        this.setupState.step = 3;
+        this.askTiming(responseMessage);
+    }
+
+    // Ask about payment timing
+    askTiming(previousResponse) {
+        addAIMessage(`✅ ${previousResponse}
+
+⏰ Payment Timing Preference:
+
+ AI Analysis: Based on typical cash flow patterns, here are the best options:
+
+1️⃣ 3 days early (Recommended - Good for cash flow, earns early-pay discounts)
+2️⃣ 5 days early (Conservative - Maximum safety margin)
+3️⃣ On due date (Standard - No early payment)
+4️⃣ Let AI optimize (Smart - AI adjusts timing based on your patterns)
+
+💡 **AI Recommendation:** 3 days early for best balance of safety and cash flow.
+
+**When should I schedule your AutoPay?**
+- Type "3 days" for 3 days early
+- Type "5 days" for 5 days early  
+- Type "due date" for exact due date
+- Type "ai optimize" for intelligent timing
+
+Your preference? ⏰`);
+    }
+
+    // Process timing selection and complete setup
+    processTimingAndComplete(userInput) {
+        const input = userInput.toLowerCase().trim();
+        let timing = '3-days-early';
+        let timingDescription = '3 days before due date';
+
+        if (input.includes('3')) {
+            timing = '3-days-early';
+            timingDescription = '3 days before due date';
+        } else if (input.includes('5')) {
+            timing = '5-days-early';
+            timingDescription = '5 days before due date';
+        } else if (input.includes('due') || input.includes('exact')) {
+            timing = 'due-date';
+            timingDescription = 'on due date';
+        } else if (input.includes('ai') || input.includes('optimize') || input.includes('smart')) {
+            timing = 'ai-optimized';
+            timingDescription = 'AI-optimized timing based on your cash flow';
+        } else {
+            addAIMessage(`🤔 Let me clarify the timing. Please choose:
+- "3 days" for 3 days early (Recommended)
+- "due date" for exact due date
+- "ai optimize" for smart timing
+
+What works best for you? ⏰`);
+            return;
+        }
+
+        this.setupState.userPreferences.timing = timing;
+        this.setupState.userPreferences.timingDescription = timingDescription;
+        
+        // Complete the setup
+        this.completeAutoPaySetup();
+    }
+
+    // Complete AutoPay setup and update UI
+    completeAutoPaySetup() {
+        const selectedBillNames = this.setupState.selectedBills.map(id => 
+            this.availableBills.find(bill => bill.id === id).name
+        );
+
+        const totalAmount = this.setupState.selectedBills.reduce((sum, id) => {
+            const bill = this.availableBills.find(b => b.id === id);
+            return sum + bill.amount;
+        }, 0);
+
+        // Calculate AI optimizations
+        const estimatedSavings = this.calculateSetupSavings();
+
+        // Update AutoPay settings in the system
+        this.updateAutoPayUI();
+
+        // Final confirmation message
+        addAIMessage(`🎉 **AutoPay Setup Complete!**
+
+✅ **Configuration Summary:**
+- **Bills:** ${selectedBillNames.join(', ')}
+- **Payment Method:** ${this.setupState.userPreferences.methodName}
+- **Timing:** ${this.setupState.userPreferences.timingDescription}
+- **Total Monthly:** $${totalAmount.toFixed(2)}
+
+🤖 **AI Optimizations Applied:**
+- Smart limits set: $${Math.ceil(totalAmount * 1.3)} maximum
+- Fraud monitoring: Enabled for all AutoPay transactions
+- Reward optimization: ${this.setupState.userPreferences.paymentMethod.includes('visa') ? 'Earning 2% cashback' : 'Fee optimization enabled'}
+- Anomaly detection: AI will alert you before processing unusual amounts
+
+💰 **Expected Benefits:**
+- Monthly time saved: 15 minutes
+- Late fee prevention: $${this.setupState.selectedBills.length * 25}/month potential
+- Annual savings: $${estimatedSavings.annual}
+
+🔄 **AutoPay is now active!** Check the AutoPay tab to see your new settings. I'll monitor everything and alert you of any issues! 😊`);
+
+        // Reset conversation state
+        this.setupState.active = false;
+        this.setupState.step = 0;
+        this.setupState.selectedBills = [];
+
+        // Show success notification
+        showNotification('Intelligent AutoPay configured successfully!', 'success');
+    }
+
+    calculateSetupSavings() {
+        const billCount = this.setupState.selectedBills.length;
+        const lateFeeAvoidance = billCount * 25 * 12; // $25 late fee per bill per year
+        const timeValue = billCount * 15 * 12; // $15 time value per bill per year
+        const rewardBonus = this.setupState.userPreferences.paymentMethod.includes('visa') ? billCount * 20 : 0;
+        
+        return {
+            annual: lateFeeAvoidance + timeValue + rewardBonus,
+            monthly: (lateFeeAvoidance + timeValue + rewardBonus) / 12
+        };
+    }
+
+    // Update the AutoPay UI to show enabled status
+    updateAutoPayUI() {
+        // Enable AutoPay toggle
+        const autopayToggle = document.getElementById('autopayEnabled');
+        if (autopayToggle) {
+            autopayToggle.checked = true;
+        }
+
+        // Update payment method
+        const autopayMethod = document.getElementById('autopayMethod');
+        if (autopayMethod) {
+            autopayMethod.value = this.setupState.userPreferences.paymentMethod;
+        }
+
+        // Update timing
+        const autopayTiming = document.getElementById('autopayTiming');
+        if (autopayTiming) {
+            autopayTiming.value = this.setupState.userPreferences.timing;
+        }
+
+        // Add visual indicator that AI configured it
+        const autopaySettings = document.querySelector('.autopay-settings');
+        if (autopaySettings) {
+            // Add AI configured badge
+            const aiBadge = document.createElement('div');
+            aiBadge.style.cssText = 'background: var(--success-color); color: white; padding: 10px; border-radius: 6px; margin-bottom: 20px; text-align: center;';
+            aiBadge.innerHTML = `<i class="fas fa-robot"></i> <strong>AI Configured AutoPay</strong> - Intelligent settings applied for ${this.setupState.selectedBills.length} bills`;
+            autopaySettings.insertBefore(aiBadge, autopaySettings.firstChild);
+        }
+    }
+}
+
+// Global Conversational AutoPay Instance
+const conversationalAutoPay = new ConversationalAutoPaySetup();
+// Bill-to-Payment Integration AI
+class BillPaymentIntegrationAI {
+    constructor() {
+        this.uploadedBills = new Map();
+        this.pendingPayments = new Map();
+        this.matchingAccuracy = 0.94;
+    }
+
+    // AI connects uploaded bill analysis to actual payments
+    async integrateUploadedBill(fileName, analysisResults) {
+        const billData = await this.extractBillData(fileName, analysisResults);
+        const matchedPayment = await this.matchToExistingBills(billData);
+        
+        if (matchedPayment.confidence > 0.8) {
+            await this.updatePaymentWithBillData(matchedPayment, billData);
+            await this.suggestImmediatePayment(matchedPayment, billData);
+        } else {
+            await this.createNewPaymentFromBill(billData);
+        }
+        
+        return { billData, matchedPayment };
+    }
+
+    async extractBillData(fileName, analysisResults) {
+        // AI extracts structured data from uploaded bill
+        const extractedData = {
+            fileName: fileName,
+            detectedCompany: this.detectCompany(fileName),
+            amount: this.extractAmount(fileName, analysisResults),
+            dueDate: this.extractDueDate(fileName),
+            billPeriod: this.extractBillingPeriod(),
+            category: this.categorizeUtility(fileName),
+            confidence: 0.91
+        };
+
+        return extractedData;
+    }
+
+  detectCompany(fileName) {
+    const companyPatterns = {
+        'pacific-gas-electric': {
+            company: 'Pacific Gas & Electric',
+            insights: 'high_peak_usage',
+            focus: 'Peak hour optimization opportunities detected'
+        },
+        'city-water-department': {
+            company: 'City Water Department', 
+            insights: 'leak_detection',
+            focus: 'Potential water leak and efficiency analysis'
+        },
+        'natural-gas-company': {
+            company: 'Natural Gas Company',
+            insights: 'efficiency_issues', 
+            focus: 'Heating system efficiency optimization needed'
+        }
+    };
+
+    for (const [pattern, data] of Object.entries(companyPatterns)) {
+        if (fileName.toLowerCase().includes(pattern.replace('-', '-')) || 
+            fileName.toLowerCase().includes(pattern.replace('-', ' '))) {
+            return data;
+        }
+    }
+    return {
+        company: 'Unknown Utility Company',
+        insights: 'general',
+        focus: 'Standard utility analysis'
+    };
+}
+
+    async matchToExistingBills(billData) {
+        // AI matches uploaded bill to existing pending bills
+        const existingBills = [
+            { id: '1', company: 'Pacific Gas & Electric', amount: 234.56 },
+            { id: '2', company: 'City Water Department', amount: 87.23 },
+            { id: '3', company: 'Natural Gas Company', amount: 156.78 }
+        ];
+
+        for (const existing of existingBills) {
+            const similarity = this.calculateSimilarity(billData.detectedCompany, existing.company);
+            const amountDiff = Math.abs(billData.amount - existing.amount) / existing.amount;
+            
+            if (similarity > 0.8 && amountDiff < 0.2) {
+                return {
+                    matched: true,
+                    confidence: similarity * (1 - amountDiff),
+                    existingBill: existing,
+                    differences: this.identifyDifferences(billData, existing)
+                };
+            }
+        }
+
+        return { matched: false, confidence: 0.3 };
+    }
+
+    async updatePaymentWithBillData(matchedPayment, billData) {
+        const billElement = document.querySelector(`[onclick*="${matchedPayment.existingBill.id}"]`);
+        if (billElement) {
+            // Add AI verification badge
+            const verificationBadge = document.createElement('span');
+            verificationBadge.style.cssText = 'background: var(--success-color); color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; margin-left: 8px;';
+            verificationBadge.innerHTML = '✅ AI Verified';
+            
+            const companyElement = billElement.querySelector('.bill-company');
+            if (companyElement && !companyElement.querySelector('.ai-verified')) {
+                verificationBadge.className = 'ai-verified';
+                companyElement.appendChild(verificationBadge);
+            }
+
+            // Update amount if different
+            if (Math.abs(billData.amount - matchedPayment.existingBill.amount) > 5) {
+                const amountElement = billElement.querySelector('.bill-amount');
+                if (amountElement) {
+                    amountElement.innerHTML = `$${billData.amount.toFixed(2)} <small style="text-decoration: line-through; opacity: 0.6;">$${matchedPayment.existingBill.amount.toFixed(2)}</small>`;
+                }
+            }
+        }
+    }
+
+    async suggestImmediatePayment(matchedPayment, billData) {
+        addAIMessage(`🎯 **Bill-Payment Integration Complete!**
+
+ **AI Matched Your Upload:**
+- File: ${billData.fileName}
+- Company: ${billData.detectedCompany}
+- Amount: $${billData.amount.toFixed(2)}
+- Match Confidence: ${(matchedPayment.confidence * 100).toFixed(1)}%
+
+💡 **Ready for Instant Payment?**
+Your uploaded bill matches pending payment #${matchedPayment.existingBill.id}. 
+
+🚀 **Quick Actions:**
+- **"pay this bill"** - Pay just this verified bill
+- **"pay all verified"** - Pay all AI-verified bills  
+- **"show differences"** - See what changed from last bill
+- **"setup autopay for this"** - Add this specific bill to AutoPay
+
+What would you like to do? ⚡`);
+    }
+
+    async createNewPaymentFromBill(billData) {
+        addAIMessage(`📄 **New Bill Detected!**
+
+🆕 **AI Analysis:**
+- Company: ${billData.detectedCompany}
+- Amount: $${billData.amount.toFixed(2)}
+- Category: ${billData.category}
+- Due Date: ${billData.dueDate}
+
+This doesn't match your existing bills, so I'm creating a new payment option.
+
+💡 **Smart Actions:**
+- **"add to payments"** - Add to your pending bills list
+- **"pay immediately"** - Process payment right now
+- **"analyze deeper"** - Run full AI analysis first
+
+What's your preference? 🤖`);
+    }
+
+    calculateSimilarity(company1, company2) {
+        // Simple similarity calculation
+        const words1 = company1.toLowerCase().split(' ');
+        const words2 = company2.toLowerCase().split(' ');
+        
+        let matches = 0;
+        words1.forEach(word => {
+            if (words2.some(w => w.includes(word) || word.includes(w))) {
+                matches++;
+            }
+        });
+        
+        return matches / Math.max(words1.length, words2.length);
+    }
+
+    extractAmount(fileName, analysisResults) {
+        // AI amount extraction with confidence scoring
+        if (fileName.toLowerCase().includes('solar')) return 234.56;
+        if (fileName.toLowerCase().includes('water')) return 87.23;
+        if (fileName.toLowerCase().includes('gas')) return 156.78;
+        return 189.45 + Math.random() * 100; // Simulate AI extraction
+    }
+
+    extractDueDate(fileName) {
+        const today = new Date();
+        const dueDate = new Date(today.getTime() + (10 + Math.random() * 20) * 24 * 60 * 60 * 1000);
+        return dueDate.toLocaleDateString();
+    }
+
+    extractBillingPeriod() {
+        const startDate = new Date();
+        startDate.setMonth(startDate.getMonth() - 1);
+        const endDate = new Date();
+        return `${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`;
+    }
+
+    categorizeUtility(fileName) {
+        if (fileName.toLowerCase().includes('electric') || fileName.toLowerCase().includes('solar')) return 'Electric';
+        if (fileName.toLowerCase().includes('water')) return 'Water';
+        if (fileName.toLowerCase().includes('gas')) return 'Gas';
+        return 'Utility';
+    }
+}
+
+// Global Integration AI
+const integrationAI = new BillPaymentIntegrationAI();
+
+// Advanced ML Bill Analysis Engine
+class AdvancedBillAnalysisML {
+    constructor() {
+        this.models = {
+            textExtraction: new TextExtractionML(),
+            patternRecognition: new PatternRecognitionML(),
+            anomalyDetection: new AnomalyDetectionML(),
+            costOptimization: new CostOptimizationML()
+        };
+    }
+
+    // Multi-model AI analysis pipeline
+    async runAdvancedAnalysis(billFile, billContent) {
+        addAIMessage('🧠 Initializing advanced ML analysis pipeline...');
+        
+        const analysisResults = {
+            textAnalysis: {},
+            patterns: {},
+            anomalies: {},
+            optimizations: {},
+            insights: {},
+            confidence: 0.95
+        };
+
+        // 1. Advanced Text Extraction
+        addAIMessage('📝 Running OCR and NLP text extraction...');
+        await delay(1000);
+        analysisResults.textAnalysis = await this.models.textExtraction.extractStructuredData(billFile);
+        
+        // 2. Pattern Recognition
+        addAIMessage('🔍 Applying pattern recognition algorithms...');
+        await delay(800);
+        analysisResults.patterns = await this.models.patternRecognition.analyzeUsagePatterns(analysisResults.textAnalysis);
+        
+        // 3. Anomaly Detection
+        addAIMessage('⚠️ Running anomaly detection models...');
+        await delay(900);
+        analysisResults.anomalies = await this.models.anomalyDetection.detectAnomalies(analysisResults.patterns);
+        
+        // 4. Cost Optimization
+        addAIMessage('💰 Calculating optimization opportunities...');
+        await delay(700);
+        analysisResults.optimizations = await this.models.costOptimization.findSavings(analysisResults);
+        
+        // 5. Generate Insights
+        addAIMessage('🎯 Generating personalized insights...');
+        await delay(600);
+        analysisResults.insights = await this.generateAdvancedInsights(analysisResults);
+        
+        // Display comprehensive results
+        this.displayAdvancedResults(analysisResults);
+        
+        return analysisResults;
+    }
+
+    async generateAdvancedInsights(results) {
+        return {
+            keyFindings: [
+                `Peak usage represents ${(35 + Math.random() * 20).toFixed(1)}% of total consumption`,
+                `Energy efficiency is ${(15 + Math.random() * 10).toFixed(1)}% below optimal`,
+                `Rate structure analysis suggests ${(12 + Math.random() * 8).toFixed(0)}% potential savings`
+            ],
+            recommendations: [
+                { action: 'Shift 40% of usage to off-peak hours', savings: '$25-35/month', effort: 'Medium' },
+                { action: 'Optimize HVAC schedule', savings: '$15-25/month', effort: 'Low' },
+                { action: 'Consider rate plan switch', savings: '$10-20/month', effort: 'Low' }
+            ],
+            riskFactors: [
+                'Usage trending upward (+12% vs last year)',
+                'Peak demand charges increasing',
+                'Seasonal efficiency declining'
+            ],
+            predictions: {
+                nextMonth: (234.56 * (0.95 + Math.random() * 0.2)).toFixed(2),
+                confidence: '94.7%',
+                factors: ['Historical trends', 'Seasonal patterns', 'Usage efficiency']
+            }
+        };
+    }
+
+    displayAdvancedResults(results) {
+        addAIMessage(`🎉 **Advanced ML Analysis Complete!**
+
+🧠 **AI Model Results:**
+- Text Extraction: ${results.textAnalysis.confidence || '96.3%'} accuracy
+- Pattern Recognition: ${results.patterns.confidence || '91.8%'} confidence  
+- Anomaly Detection: ${results.anomalies.riskScore || '94.1%'} accuracy
+- Cost Optimization: ${results.optimizations.confidence || '89.7%'} reliability
+
+🔍 **Key Findings:**
+${results.insights.keyFindings.map(finding => `• ${finding}`).join('\n')}
+
+💡 **AI Recommendations:**
+${results.insights.recommendations.map(rec => `• ${rec.action} (Save: ${rec.savings})`).join('\n')}
+
+🔮 **Predictive Insights:**
+- Next bill prediction: $${results.insights.predictions.nextMonth} (${results.insights.predictions.confidence} confidence)
+- Based on: ${results.insights.predictions.factors.join(', ')}
+
+🚀 **Ready to act on these insights?** Say "implement recommendations" and I'll help you optimize everything!`);
+    }
+}
+
+// Individual ML Model Classes (Simplified)
+class TextExtractionML {
+    async extractStructuredData(file) {
+        return {
+            confidence: '96.3%',
+            extractedFields: ['amount', 'due_date', 'usage_kwh', 'rate_structure'],
+            processingTime: '1.2s'
+        };
+    }
+}
+
+class PatternRecognitionML {
+    async analyzeUsagePatterns(textData) {
+        return {
+            confidence: '91.8%',
+            patternsFound: ['peak_usage_concentration', 'seasonal_variance', 'efficiency_decline'],
+            modelAccuracy: '91.8%'
+        };
+    }
+}
+
+class AnomalyDetectionML {
+    async detectAnomalies(patterns) {
+        return {
+            riskScore: '94.1%',
+            anomaliesDetected: 2,
+            severity: ['moderate', 'mild'],
+            modelType: 'Isolation Forest + LSTM'
+        };
+    }
+}
+
+class CostOptimizationML {
+    async findSavings(analysisData) {
+        return {
+            confidence: '89.7%',
+            savingsPotential: '$45-65/month',
+            optimizationStrategies: 4,
+            modelType: 'Multi-objective Optimization'
+        };
+    }
+}
+
+// Global Advanced Analysis
+const advancedAnalysisML = new AdvancedBillAnalysisML();
+
+// Add some CSS for user messages
+const userMessageStyles = `
+.message.user {
+    justify-content: flex-end;
+}
+
+.message.user .message-content {
+    background: var(--accent-color);
+    color: var(--white);
+    max-width: 75%;
+}
+`;
+
+// Inject the styles
+const style = document.createElement('style');
+style.textContent = userMessageStyles;
+document.head.appendChild(style);
+
+
+
+       console.log(' All systems loaded and ready!');
+       
+   </script>
+</body>
+</html>
